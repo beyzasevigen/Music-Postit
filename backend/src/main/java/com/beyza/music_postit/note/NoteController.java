@@ -2,6 +2,7 @@ package com.beyza.music_postit.note;
 
 import com.beyza.music_postit.song.Song;
 import com.beyza.music_postit.song.SongRepository;
+import com.beyza.music_postit.like.LikeRepository;
 import com.beyza.music_postit.user.User;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
@@ -15,11 +16,14 @@ public class NoteController {
 
     private final NoteRepository noteRepository;
     private final SongRepository songRepository;
+    private final LikeRepository likeRepository;
 
     public NoteController(NoteRepository noteRepository,
-                          SongRepository songRepository) {
+                          SongRepository songRepository,
+                          LikeRepository likeRepository) {
         this.noteRepository = noteRepository;
         this.songRepository = songRepository;
+        this.likeRepository = likeRepository;
     }
 
     // 1) Yeni not oluştur
@@ -27,14 +31,16 @@ public class NoteController {
     public ResponseEntity<?> createNote(@RequestBody NoteCreateRequest request,
                                         @AuthenticationPrincipal User currentUser) {
 
+        if (currentUser == null) {
+            return ResponseEntity.status(401).body("Login olmalısın");
+        }
+
         if (request.getSongId() == null || request.getTimestampSec() == null ||
                 request.getText() == null || request.getText().isBlank()) {
             return ResponseEntity.badRequest().body("songId, timestampSec ve text zorunlu");
         }
 
-        Song song = songRepository.findById(request.getSongId())
-                .orElse(null);
-
+        Song song = songRepository.findById(request.getSongId()).orElse(null);
         if (song == null) {
             return ResponseEntity.badRequest().body("Song not found");
         }
@@ -47,21 +53,23 @@ public class NoteController {
 
         Note saved = noteRepository.save(note);
 
-        NoteResponse response = toResponse(saved);
-        return ResponseEntity.ok(response);
+        return ResponseEntity.ok(toResponse(saved, currentUser));
     }
 
     // 2) Bir şarkıya ait tüm notları getir
     @GetMapping("/songs/{songId}/notes")
-    public ResponseEntity<?> getNotesForSong(@PathVariable Long songId) {
+    public ResponseEntity<?> getNotesForSong(@PathVariable Long songId,
+                                             @AuthenticationPrincipal User currentUser) {
+
         Song song = songRepository.findById(songId).orElse(null);
         if (song == null) {
             return ResponseEntity.notFound().build();
         }
 
         List<Note> notes = noteRepository.findBySongOrderByTimestampSecAsc(song);
+
         List<NoteResponse> responses = notes.stream()
-                .map(this::toResponse)
+                .map(note -> toResponse(note, currentUser))
                 .toList();
 
         return ResponseEntity.ok(responses);
@@ -77,7 +85,7 @@ public class NoteController {
         var notes = noteRepository.findByUserOrderByCreatedAtDesc(currentUser);
 
         var responses = notes.stream()
-                .map(this::toResponse)
+                .map(note -> toResponse(note, currentUser))
                 .toList();
 
         return ResponseEntity.ok(responses);
@@ -89,17 +97,19 @@ public class NoteController {
                                         @RequestBody NoteCreateRequest request,
                                         @AuthenticationPrincipal User currentUser) {
 
+        if (currentUser == null) {
+            return ResponseEntity.status(401).body("Login olmalısın");
+        }
+
         Note note = noteRepository.findById(id).orElse(null);
         if (note == null) {
             return ResponseEntity.notFound().build();
         }
 
-        // Başkasının notunu güncelleyemesin
         if (!note.getUser().getId().equals(currentUser.getId())) {
             return ResponseEntity.status(403).body("Bu notu güncelleme yetkin yok");
         }
 
-        // Sadece text zorunlu diyelim, timestamp opsiyonel güncellenebilir
         if (request.getText() == null || request.getText().isBlank()) {
             return ResponseEntity.badRequest().body("Text boş olamaz");
         }
@@ -111,13 +121,17 @@ public class NoteController {
         }
 
         Note saved = noteRepository.save(note);
-        return ResponseEntity.ok(toResponse(saved));
+        return ResponseEntity.ok(toResponse(saved, currentUser));
     }
 
     // 5) Bir notu sil (sadece sahibi)
     @DeleteMapping("/notes/{id}")
     public ResponseEntity<?> deleteNote(@PathVariable Long id,
                                         @AuthenticationPrincipal User currentUser) {
+
+        if (currentUser == null) {
+            return ResponseEntity.status(401).body("Login olmalısın");
+        }
 
         Note note = noteRepository.findById(id).orElse(null);
         if (note == null) {
@@ -132,8 +146,11 @@ public class NoteController {
         return ResponseEntity.ok("Note deleted");
     }
 
+    // ✅ liked + likesCount hesaplayan mapper
+    private NoteResponse toResponse(Note note, User currentUser) {
+        boolean liked = currentUser != null && likeRepository.existsByUserAndNote(currentUser, note);
+        long count = likeRepository.countByNote(note);
 
-    private NoteResponse toResponse(Note note) {
         return new NoteResponse(
                 note.getId(),
                 note.getUser().getId(),
@@ -141,7 +158,9 @@ public class NoteController {
                 note.getSong().getId(),
                 note.getTimestampSec(),
                 note.getText(),
-                note.getCreatedAt()
+                note.getCreatedAt(),
+                liked,
+                count
         );
     }
 }

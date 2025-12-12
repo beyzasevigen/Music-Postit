@@ -32,12 +32,21 @@ public class SongController {
                 .orElseGet(() -> ResponseEntity.notFound().build());
     }
 
-    // 3) Yeni şarkı ekle (şimdilik herkes ekleyebiliyor)
+    // 3) Yeni şarkı ekle veya var olanı döndür (externalId üzerinden)
     @PostMapping
     public ResponseEntity<?> createSong(@RequestBody SongCreateRequest request) {
         if (request.getTitle() == null || request.getTitle().isBlank()
                 || request.getArtist() == null || request.getArtist().isBlank()) {
             return ResponseEntity.badRequest().body("title ve artist zorunlu");
+        }
+
+        // Eğer externalId geldiyse, var mı diye kontrol et
+        if (request.getExternalId() != null && !request.getExternalId().isBlank()) {
+            var existing = songRepository.findByExternalId(request.getExternalId());
+            if (existing.isPresent()) {
+                // zaten kayıtlı → direkt onu dön
+                return ResponseEntity.ok(toResponse(existing.get()));
+            }
         }
 
         Song song = new Song();
@@ -51,6 +60,7 @@ public class SongController {
         Song saved = songRepository.save(song);
         return ResponseEntity.ok(toResponse(saved));
     }
+
 
     private SongResponse toResponse(Song song) {
         return new SongResponse(

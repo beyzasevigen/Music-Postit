@@ -11,13 +11,17 @@ public class NoteResponse {
     private Integer timestampSec;
     private String text;
     private LocalDateTime createdAt;
+    private boolean liked;
+    private long likesCount;
+
 
     public NoteResponse() {
     }
 
     public NoteResponse(Long id, Long userId, String username,
                         Long songId, Integer timestampSec,
-                        String text, LocalDateTime createdAt) {
+                        String text, LocalDateTime createdAt,
+                        boolean liked, long likesCount) {
         this.id = id;
         this.userId = userId;
         this.username = username;
@@ -25,6 +29,8 @@ public class NoteResponse {
         this.timestampSec = timestampSec;
         this.text = text;
         this.createdAt = createdAt;
+        this.liked = liked;
+        this.likesCount = likesCount;
     }
 
     public Long getId() {
@@ -55,6 +61,14 @@ public class NoteResponse {
         return createdAt;
     }
 
+    public boolean isLiked() {
+        return liked;
+    }
+
+    public long getLikesCount() {
+        return likesCount;
+    }
+
     public void setId(Long id) {
         this.id = id;
     }
@@ -81,5 +95,13 @@ public class NoteResponse {
 
     public void setCreatedAt(LocalDateTime createdAt) {
         this.createdAt = createdAt;
+    }
+
+    public void setLiked(boolean liked) {
+        this.liked = liked;
+    }
+
+    public void setLikesCount(long likesCount) {
+        this.likesCount = likesCount;
     }
 }
