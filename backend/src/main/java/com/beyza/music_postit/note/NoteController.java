@@ -148,8 +148,13 @@ public class NoteController {
 
     // ✅ liked + likesCount hesaplayan mapper
     private NoteResponse toResponse(Note note, User currentUser) {
-        boolean liked = currentUser != null && likeRepository.existsByUserAndNote(currentUser, note);
-        long count = likeRepository.countByNote(note);
+        Long noteId = note.getId();
+        long count = likeRepository.countByNote_Id(noteId);
+
+        boolean liked = false;
+        if (currentUser != null) {
+            liked = likeRepository.existsByUser_IdAndNote_Id(currentUser.getId(), noteId);
+        }
 
         return new NoteResponse(
                 note.getId(),

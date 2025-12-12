@@ -7,6 +7,8 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.Optional;
+
 @RestController
 @RequestMapping("/api/notes")
 public class LikeController {
@@ -20,47 +22,51 @@ public class LikeController {
         this.noteRepository = noteRepository;
     }
 
-    // 1) Like / Unlike (toggle)
+    // ✅ Like / Unlike (toggle)
     @PostMapping("/{noteId}/like")
     public ResponseEntity<?> toggleLike(@PathVariable Long noteId,
                                         @AuthenticationPrincipal User currentUser) {
+
         Note note = noteRepository.findById(noteId).orElse(null);
         if (note == null) {
             return ResponseEntity.notFound().build();
         }
 
-        boolean alreadyLiked = likeRepository.existsByUserAndNote(currentUser, note);
+        Long userId = currentUser.getId();
 
-        if (alreadyLiked) {
-            // daha önce beğenmiş → unlike yap
-            likeRepository.deleteByUserAndNote(currentUser, note);
+        Optional<Like> existingLike =
+                likeRepository.findByUser_IdAndNote_Id(userId, noteId);
+
+        boolean liked;
+
+        if (existingLike.isPresent()) {
+            // unlike
+            likeRepository.delete(existingLike.get());
+            liked = false;
         } else {
-            // beğenilmemiş → yeni like ekle
+            // like
             Like like = new Like();
             like.setUser(currentUser);
             like.setNote(note);
             likeRepository.save(like);
+            liked = true;
         }
 
-        long count = likeRepository.countByNote(note);
-        LikeStatusResponse response = new LikeStatusResponse(
-                note.getId(),
-                !alreadyLiked,  // işlemden SONRA liked mi?
-                count
-        );
+        long count = likeRepository.countByNote_Id(noteId);
 
-        return ResponseEntity.ok(response);
+        return ResponseEntity.ok(new LikeStatusResponse(noteId, liked, count));
     }
 
-    // 2) Sadece like sayısını almak için (opsiyonel ama faydalı)
+    // ✅ Like sayısını getir (opsiyonel)
     @GetMapping("/{noteId}/likes/count")
     public ResponseEntity<?> getLikesCount(@PathVariable Long noteId) {
-        Note note = noteRepository.findById(noteId).orElse(null);
-        if (note == null) {
+
+        // Not var mı kontrol (404 için)
+        if (!noteRepository.existsById(noteId)) {
             return ResponseEntity.notFound().build();
         }
 
-        long count = likeRepository.countByNote(note);
+        long count = likeRepository.countByNote_Id(noteId);
         return ResponseEntity.ok(count);
     }
 }
