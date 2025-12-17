@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
-import { useParams, Link } from "react-router-dom";
+import { useParams, Link, useNavigate } from "react-router-dom";
+import { getAuthHeader } from "./auth";
 
 export default function SongPage() {
   const { id } = useParams(); // URL'deki :id (songId)
@@ -9,9 +10,19 @@ export default function SongPage() {
   const [noteText, setNoteText] = useState("");
   const [timestamp, setTimestamp] = useState("");
   const [error, setError] = useState("");
+  const navigate = useNavigate();
 
-  // Şarkı + notları yükle
+  const auth = getAuthHeader();
+
+  // 🔐 login yoksa yönlendir
   useEffect(() => {
+    if (!auth) navigate("/login");
+  }, [auth, navigate]);
+
+  // 🎵 Şarkı + notları yükle
+  useEffect(() => {
+    if (!auth) return;
+
     const fetchData = async () => {
       setLoading(true);
       setError("");
@@ -20,7 +31,7 @@ export default function SongPage() {
         // 1) Şarkı bilgisi
         const songRes = await fetch(`http://localhost:8080/api/songs/${id}`, {
           headers: {
-            Authorization: "Basic " + btoa("beyza:secret"),
+            Authorization: auth,
           },
         });
 
@@ -36,7 +47,7 @@ export default function SongPage() {
           `http://localhost:8080/api/songs/${id}/notes`,
           {
             headers: {
-              Authorization: "Basic " + btoa("beyza:secret"),
+              Authorization: auth,
             },
           }
         );
@@ -47,11 +58,11 @@ export default function SongPage() {
 
         const notesData = await notesRes.json();
 
-        // liked / likesCount yoksa default verelim
         const normalized = notesData.map((n) => ({
           ...n,
           liked: Boolean(n.liked),
-          likesCount: typeof n.likesCount === "number" ? n.likesCount : 0,
+          likesCount:
+            typeof n.likesCount === "number" ? n.likesCount : 0,
         }));
 
         setNotes(normalized);
@@ -64,18 +75,19 @@ export default function SongPage() {
     };
 
     fetchData();
-  }, [id]);
+  }, [id, auth]);
 
-  // Yeni not ekleme
+  // ➕ Yeni not ekleme
   const createNote = async () => {
     if (!timestamp || !noteText.trim()) return;
+    if (!auth) return navigate("/login");
 
     try {
       const res = await fetch("http://localhost:8080/api/notes", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
-          Authorization: "Basic " + btoa("beyza:secret"),
+          Authorization: auth,
         },
         body: JSON.stringify({
           songId: Number(id),
@@ -93,12 +105,16 @@ export default function SongPage() {
       const normalized = {
         ...created,
         liked: Boolean(created.liked),
-        likesCount: typeof created.likesCount === "number" ? created.likesCount : 0,
+        likesCount:
+          typeof created.likesCount === "number"
+            ? created.likesCount
+            : 0,
       };
 
-      // Listeye ekle (timestamp’e göre sıralayalım)
       setNotes((prev) =>
-        [...prev, normalized].sort((a, b) => a.timestampSec - b.timestampSec)
+        [...prev, normalized].sort(
+          (a, b) => a.timestampSec - b.timestampSec
+        )
       );
 
       setNoteText("");
@@ -109,45 +125,46 @@ export default function SongPage() {
     }
   };
 
-  // Like / Unlike toggle
+  // ❤️ Like / Unlike
   const toggleLike = async (noteId) => {
-  try {
-    const res = await fetch(`http://localhost:8080/api/notes/${noteId}/like`, {
-      method: "POST",
-      headers: {
-        Authorization: "Basic " + btoa("beyza:secret"),
-      },
-    });
+    if (!auth) return navigate("/login");
 
-    if (!res.ok) {
-      throw new Error("Like işlemi başarısız: " + res.status);
+    try {
+      const res = await fetch(
+        `http://localhost:8080/api/notes/${noteId}/like`,
+        {
+          method: "POST",
+          headers: {
+            Authorization: auth,
+          },
+        }
+      );
+
+      if (!res.ok) {
+        throw new Error("Like işlemi başarısız");
+      }
+
+      const data = await res.json();
+
+      setNotes((prev) =>
+        prev.map((n) =>
+          Number(n.id) === Number(data.noteId)
+            ? {
+                ...n,
+                liked: Boolean(data.liked),
+                likesCount:
+                  typeof data.likesCount === "number"
+                    ? data.likesCount
+                    : 0,
+              }
+            : n
+        )
+      );
+    } catch (err) {
+      console.error(err);
+      alert("Like işlemi sırasında hata oluştu.");
     }
-
-    const data = await res.json();
-    console.log("toggleLike response:", data); // ✅ bunu ekle
-
-    const updatedNoteId = Number(data.noteId ?? noteId);
-    const newLiked = Boolean(data.liked);
-    const newCount =
-      typeof data.likesCount === "number"
-        ? data.likesCount
-        : typeof data.likesCount === "string"
-        ? Number(data.likesCount)
-        : 0;
-
-    setNotes((prev) =>
-      prev.map((n) =>
-        Number(n.id) === updatedNoteId
-          ? { ...n, liked: newLiked, likesCount: newCount }
-          : n
-      )
-    );
-  } catch (err) {
-    console.error(err);
-    alert("Like işlemi sırasında hata oluştu.");
-  }
-};
-
+  };
 
   if (loading) {
     return (
@@ -221,12 +238,24 @@ export default function SongPage() {
 
         <div>
           <h1 style={{ fontSize: 24, marginBottom: 4 }}>{song.title}</h1>
-          <div style={{ color: "#9ca3af", marginBottom: 4 }}>{song.artist}</div>
-          <div style={{ color: "#6b7280", fontSize: 14 }}>{song.album}</div>
+          <div style={{ color: "#9ca3af", marginBottom: 4 }}>
+            {song.artist}
+          </div>
+          <div style={{ color: "#6b7280", fontSize: 14 }}>
+            {song.album}
+          </div>
           {song.durationSec && (
-            <div style={{ color: "#6b7280", fontSize: 13, marginTop: 8 }}>
+            <div
+              style={{
+                color: "#6b7280",
+                fontSize: 13,
+                marginTop: 8,
+              }}
+            >
               Süre: {Math.floor(song.durationSec / 60)}:
-              {(song.durationSec % 60).toString().padStart(2, "0")}
+              {(song.durationSec % 60)
+                .toString()
+                .padStart(2, "0")}
             </div>
           )}
         </div>
@@ -242,17 +271,29 @@ export default function SongPage() {
           border: "1px solid #1f2937",
         }}
       >
-        <h2 style={{ fontSize: 18, marginBottom: 12 }}>Yeni not ekle</h2>
+        <h2 style={{ fontSize: 18, marginBottom: 12 }}>
+          Yeni not ekle
+        </h2>
 
-        <div style={{ display: "flex", gap: 12, marginBottom: 12 }}>
+        <div
+          style={{
+            display: "flex",
+            gap: 12,
+            marginBottom: 12,
+          }}
+        >
           <div>
-            <label style={{ fontSize: 12, color: "#9ca3af" }}>
+            <label
+              style={{ fontSize: 12, color: "#9ca3af" }}
+            >
               Zaman (saniye)
             </label>
             <input
               type="number"
               value={timestamp}
-              onChange={(e) => setTimestamp(e.target.value)}
+              onChange={(e) =>
+                setTimestamp(e.target.value)
+              }
               min="0"
               style={{
                 marginTop: 4,
@@ -267,10 +308,16 @@ export default function SongPage() {
           </div>
 
           <div style={{ flex: 1 }}>
-            <label style={{ fontSize: 12, color: "#9ca3af" }}>Not</label>
+            <label
+              style={{ fontSize: 12, color: "#9ca3af" }}
+            >
+              Not
+            </label>
             <textarea
               value={noteText}
-              onChange={(e) => setNoteText(e.target.value)}
+              onChange={(e) =>
+                setNoteText(e.target.value)
+              }
               rows={3}
               style={{
                 marginTop: 4,
@@ -305,15 +352,28 @@ export default function SongPage() {
 
       {/* Not listesi */}
       <div style={{ marginTop: 24 }}>
-        <h2 style={{ fontSize: 18, marginBottom: 12 }}>Şarkıdaki notlar</h2>
+        <h2 style={{ fontSize: 18, marginBottom: 12 }}>
+          Şarkıdaki notlar
+        </h2>
 
         {notes.length === 0 && (
-          <div style={{ color: "#6b7280", fontSize: 14 }}>
+          <div
+            style={{
+              color: "#6b7280",
+              fontSize: 14,
+            }}
+          >
             Bu şarkı için henüz not yok.
           </div>
         )}
 
-        <ul style={{ listStyle: "none", padding: 0, marginTop: 8 }}>
+        <ul
+          style={{
+            listStyle: "none",
+            padding: 0,
+            marginTop: 8,
+          }}
+        >
           {notes.map((note) => (
             <li
               key={note.id}
@@ -341,18 +401,25 @@ export default function SongPage() {
                       marginBottom: 4,
                     }}
                   >
-                    {note.timestampSec}s — {note.username}
+                    {note.timestampSec}s —{" "}
+                    {note.username}
                   </div>
-                  <div style={{ fontSize: 14 }}>{note.text}</div>
+                  <div style={{ fontSize: 14 }}>
+                    {note.text}
+                  </div>
                 </div>
 
                 <button
-                  onClick={() => toggleLike(note.id)}
+                  onClick={() =>
+                    toggleLike(note.id)
+                  }
                   style={{
                     padding: "6px 10px",
                     borderRadius: 999,
                     border: "1px solid #1f2937",
-                    background: note.liked ? "#ef4444" : "#0f172a",
+                    background: note.liked
+                      ? "#ef4444"
+                      : "#0f172a",
                     color: "#e5e7eb",
                     cursor: "pointer",
                     minWidth: 72,
@@ -360,7 +427,8 @@ export default function SongPage() {
                   }}
                   title="Like"
                 >
-                  {note.liked ? "❤️" : "🤍"} {note.likesCount}
+                  {note.liked ? "❤️" : "🤍"}{" "}
+                  {note.likesCount}
                 </button>
               </div>
             </li>

@@ -49,20 +49,31 @@ public class PlayHistoryController {
     }
 
     // 2) Giriş yapmış kullanıcının dinleme geçmişi
-    @GetMapping("/play-history/me")
-    public ResponseEntity<?> getMyPlayHistory(@AuthenticationPrincipal User currentUser) {
+    @GetMapping("/play-history/me/recent-songs")
+    public ResponseEntity<?> getMyRecentSongs(@AuthenticationPrincipal User currentUser) {
+
         if (currentUser == null) {
             return ResponseEntity.status(401).body("Login olmalısın");
         }
 
-        List<PlayHistory> list = playHistoryRepository.findByUserOrderByPlayedAtDesc(currentUser);
+        var historyList = playHistoryRepository
+                .findByUserOrderByPlayedAtDesc(currentUser);
 
-        List<PlayHistoryResponse> responses = list.stream()
-                .map(this::toResponse)
+        var songs = historyList.stream()
+                .map(PlayHistory::getSong)
+                .distinct()
+                .limit(10)
+                .map(song -> new RecentSongResponse(
+                        song.getId(),
+                        song.getTitle(),
+                        song.getArtist(),
+                        song.getCoverUrl()
+                ))
                 .toList();
 
-        return ResponseEntity.ok(responses);
+        return ResponseEntity.ok(songs);
     }
+
 
     private PlayHistoryResponse toResponse(PlayHistory ph) {
         return new PlayHistoryResponse(

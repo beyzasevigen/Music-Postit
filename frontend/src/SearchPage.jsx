@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
+import { getAuthHeader } from "./auth";
 
 export default function SearchPage() {
   const [query, setQuery] = useState("");
@@ -8,16 +9,16 @@ export default function SearchPage() {
   const [error, setError] = useState("");
   const [success, setSuccess] = useState("");
   const navigate = useNavigate();
+  const auth = getAuthHeader();
 
-
-  // 🎵 1) Spotify'dan gelen şarkıyı backend'deki Song tablosuna kaydet
+  // 🎵 Spotify'dan gelen şarkıyı backend'e kaydet
   const importSong = async (song) => {
     try {
       const response = await fetch("http://localhost:8080/api/songs", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
-          Authorization: "Basic " + btoa("beyza:secret"),
+          Authorization: auth,
         },
         body: JSON.stringify({
           externalId: song.externalId,
@@ -34,18 +35,16 @@ export default function SearchPage() {
       }
 
       const saved = await response.json();
-      console.log("Saved song:", saved);
-      setSuccess(`"${saved.title}" sisteme eklendi (id: ${saved.id})`);
-      // TODO: Sonra burada /song/{saved.id} sayfasına yönlendirebiliriz.
-      navigate(`/song/${saved.id}`); // bu şekil
+      setSuccess(`"${saved.title}" sisteme eklendi`);
+      navigate(`/song/${saved.id}`);
     } catch (err) {
-    console.error(err);
-    setSuccess("");
-    alert("Şarkıyı kaydederken hata oluştu.");
+      console.error(err);
+      setSuccess("");
+      alert("Şarkıyı kaydederken hata oluştu.");
     }
   };
 
-  // 🔍 2) Spotify araması
+  // 🔍 Spotify araması
   const search = async () => {
     if (!query.trim()) return;
 
@@ -60,7 +59,7 @@ export default function SearchPage() {
         {
           method: "GET",
           headers: {
-            Authorization: "Basic " + btoa("beyza:secret"),
+            Authorization: auth,
           },
         }
       );
@@ -137,18 +136,18 @@ export default function SearchPage() {
       {error && <div style={{ color: "#f97316" }}>{error}</div>}
       {success && (
         <div
-            style={{
+          style={{
             marginTop: 8,
             padding: "8px 12px",
             borderRadius: 8,
             background: "#022c22",
             color: "#bbf7d0",
             fontSize: 13,
-            }}
+          }}
         >
-            {success}
+          {success}
         </div>
-        )}
+      )}
 
       <ul style={{ listStyle: "none", padding: 0, marginTop: 16 }}>
         {results.map((song) => (
