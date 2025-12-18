@@ -1,9 +1,10 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { useParams, Link, useNavigate } from "react-router-dom";
 import { getAuthHeader } from "./auth";
+import BottomNav from "./BottomNav";
 
 export default function SongPage() {
-  const { id } = useParams(); // URL'deki :id (songId)
+  const { id } = useParams();
 
   const [song, setSong] = useState(null);
   const [notes, setNotes] = useState([]);
@@ -13,7 +14,7 @@ export default function SongPage() {
   const [timestamp, setTimestamp] = useState("");
   const [error, setError] = useState("");
 
-  const [isPublic, setIsPublic] = useState(true); // ✅ default public
+  const [isPublic, setIsPublic] = useState(true);
   const sentPlayHistoryRef = useRef(false);
 
   const navigate = useNavigate();
@@ -23,12 +24,10 @@ export default function SongPage() {
   const onlyMine = params.get("mine") === "true";
   const vis = params.get("vis"); // "public" | "private" | null
 
-  // ✅ kendi kullanıcı bilgisini localStorage'dan al
   const myUsername = localStorage.getItem("auth_username") || "";
   const myUserIdRaw = localStorage.getItem("auth_userId");
   const myUserId = myUserIdRaw ? Number(myUserIdRaw) : null;
 
-  // ✅ mine=true ise sadece benim notlarım + vis filtresi
   const filteredNotes = useMemo(() => {
     let arr = Array.isArray(notes) ? notes : [];
 
@@ -44,21 +43,16 @@ export default function SongPage() {
       });
     }
 
-    if (vis === "public") {
-      arr = arr.filter((n) => n.isPublic === true);
-    } else if (vis === "private") {
-      arr = arr.filter((n) => n.isPublic === false);
-    }
+    if (vis === "public") arr = arr.filter((n) => n.isPublic === true);
+    else if (vis === "private") arr = arr.filter((n) => n.isPublic === false);
 
     return arr;
   }, [notes, onlyMine, vis, myUserId, myUsername]);
 
-  // 🔐 login yoksa yönlendir
   useEffect(() => {
     if (!auth) navigate("/login");
   }, [auth, navigate]);
 
-  // 🎵 Şarkı + notları yükle
   useEffect(() => {
     if (!auth) return;
 
@@ -67,17 +61,14 @@ export default function SongPage() {
       setError("");
 
       try {
-        // 1) Şarkı bilgisi
         const songRes = await fetch(`http://localhost:8080/api/songs/${id}`, {
           headers: { Authorization: auth },
         });
-
         if (!songRes.ok) throw new Error("Şarkı bulunamadı");
 
         const songData = await songRes.json();
         setSong(songData);
 
-        // ✅ StrictMode double-call engeli: play-history sadece 1 kere
         if (!sentPlayHistoryRef.current) {
           sentPlayHistoryRef.current = true;
           try {
@@ -97,24 +88,18 @@ export default function SongPage() {
           }
         }
 
-        // 2) Notlar
         const notesRes = await fetch(
           `http://localhost:8080/api/songs/${id}/notes`,
           { headers: { Authorization: auth } }
         );
-
         if (!notesRes.ok) throw new Error("Notlar alınamadı");
 
         const notesData = await notesRes.json();
-
-        const normalized = (Array.isArray(notesData) ? notesData : []).map(
-          (n) => ({
-            ...n,
-            liked: Boolean(n.liked),
-            likesCount: typeof n.likesCount === "number" ? n.likesCount : 0,
-          })
-        );
-
+        const normalized = (Array.isArray(notesData) ? notesData : []).map((n) => ({
+          ...n,
+          liked: Boolean(n.liked),
+          likesCount: typeof n.likesCount === "number" ? n.likesCount : 0,
+        }));
         setNotes(normalized);
       } catch (err) {
         console.error(err);
@@ -127,7 +112,6 @@ export default function SongPage() {
     fetchData();
   }, [id, auth]);
 
-  // ➕ Yeni not ekleme ✅ (BURASI createNote)
   const createNote = async () => {
     if (!timestamp || !noteText.trim()) return;
     if (!auth) return navigate("/login");
@@ -143,14 +127,13 @@ export default function SongPage() {
           songId: Number(id),
           timestampSec: Number(timestamp),
           text: noteText,
-          isPublic: isPublic, // ✅ EKLENDİ
+          isPublic: isPublic,
         }),
       });
 
       if (!res.ok) throw new Error("Not eklenemedi");
 
       const created = await res.json();
-
       const normalized = {
         ...created,
         liked: Boolean(created.liked),
@@ -163,25 +146,21 @@ export default function SongPage() {
 
       setNoteText("");
       setTimestamp("");
-      setIsPublic(true); // reset
+      setIsPublic(true);
     } catch (err) {
       console.error(err);
       alert("Not eklerken bir hata oluştu.");
     }
   };
 
-  // ❤️ Like / Unlike
   const toggleLike = async (noteId) => {
     if (!auth) return navigate("/login");
 
     try {
-      const res = await fetch(
-        `http://localhost:8080/api/notes/${noteId}/like`,
-        {
-          method: "POST",
-          headers: { Authorization: auth },
-        }
-      );
+      const res = await fetch(`http://localhost:8080/api/notes/${noteId}/like`, {
+        method: "POST",
+        headers: { Authorization: auth },
+      });
 
       if (!res.ok) throw new Error("Like işlemi başarısız");
 
@@ -193,8 +172,7 @@ export default function SongPage() {
             ? {
                 ...n,
                 liked: Boolean(data.liked),
-                likesCount:
-                  typeof data.likesCount === "number" ? data.likesCount : 0,
+                likesCount: typeof data.likesCount === "number" ? data.likesCount : 0,
               }
             : n
         )
@@ -205,239 +183,276 @@ export default function SongPage() {
     }
   };
 
+  const UI = {
+  cardBg: "rgba(184,156,255,0.08)",      // mor cam
+  cardBorder: "rgba(184,156,255,0.18)",
+  inputBg: "rgba(15,23,42,0.55)",
+  inputBorder: "rgba(184,156,255,0.22)",
+  accent: "#b89cff",                      // Private moru
+  accentText: "#120a1d",
+};
+
+
+  // Loading/Error ekranlarını da yeni layouta uyduralım
   if (loading) {
     return (
-      <div
-        style={{
-          minHeight: "100vh",
-          background: "#020617",
-          color: "#e5e7eb",
-          padding: "32px",
-        }}
-      >
-        Yükleniyor...
+      <div className="page">
+        <div className="content" style={{ paddingBottom: 110 }}>
+          Yükleniyor...
+          <BottomNav />
+        </div>
       </div>
     );
   }
 
   if (error || !song) {
     return (
-      <div
-        style={{
-          minHeight: "100vh",
-          background: "#020617",
-          color: "#e5e7eb",
-          padding: "32px",
-        }}
-      >
-        <p>{error || "Bir hata oluştu."}</p>
-        <Link to="/" style={{ color: "#38bdf8" }}>
-          ← Aramaya dön
-        </Link>
+      <div className="page">
+        <div className="content" style={{ paddingBottom: 110 }}>
+          <p>{error || "Bir hata oluştu."}</p>
+          <Link to="/" style={{ color: "#b89cff" }}>
+            ← Aramaya dön
+          </Link>
+          <BottomNav />
+        </div>
       </div>
     );
   }
 
   return (
-    <div
-      style={{
-        minHeight: "100vh",
-        background: "#020617",
-        color: "#e5e7eb",
-        padding: "32px",
-        fontFamily:
-          'system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif',
-      }}
-    >
-      <Link to="/" style={{ color: "#38bdf8", fontSize: 14 }}>
-        ← Spotify aramaya dön
-      </Link>
+    <div className="page">
+      <div className="content" style={{ paddingBottom: 110 }}>
+        <Link to="/" style={{ color: "#b89cff", fontSize: 14 }}>
+          ← Aramaya dön
+        </Link>
 
-      {/* Şarkı header */}
-      <div style={{ marginTop: 16, display: "flex", gap: 24, alignItems: "center" }}>
-        {song.coverUrl && (
-          <img
-            src={song.coverUrl}
-            alt=""
-            style={{ width: 120, height: 120, borderRadius: 16, objectFit: "cover" }}
-          />
-        )}
-
-        <div>
-          <h1 style={{ fontSize: 24, marginBottom: 4 }}>{song.title}</h1>
-          <div style={{ color: "#9ca3af", marginBottom: 4 }}>{song.artist}</div>
-          <div style={{ color: "#6b7280", fontSize: 14 }}>{song.album}</div>
-          {song.durationSec && (
-            <div style={{ color: "#6b7280", fontSize: 13, marginTop: 8 }}>
-              Süre: {Math.floor(song.durationSec / 60)}:
-              {(song.durationSec % 60).toString().padStart(2, "0")}
-            </div>
-          )}
-        </div>
-      </div>
-
-      {/* Yeni not formu */}
-      <div
-        style={{
-          marginTop: 32,
-          padding: 16,
-          borderRadius: 16,
-          background: "#030712",
-          border: "1px solid #1f2937",
-        }}
-      >
-        <h2 style={{ fontSize: 18, marginBottom: 12 }}>Yeni not ekle</h2>
-
-        <div style={{ display: "flex", gap: 12, marginBottom: 12 }}>
-          <div>
-            <label style={{ fontSize: 12, color: "#9ca3af" }}>Zaman (saniye)</label>
-            <input
-              type="number"
-              value={timestamp}
-              onChange={(e) => setTimestamp(e.target.value)}
-              min="0"
-              style={{
-                marginTop: 4,
-                padding: "6px 8px",
-                borderRadius: 8,
-                border: "1px solid #4b5563",
-                background: "#020617",
-                color: "#e5e7eb",
-                width: 120,
-              }}
-            />
-          </div>
-
-          <div style={{ flex: 1 }}>
-            <label style={{ fontSize: 12, color: "#9ca3af" }}>Not</label>
-            <textarea
-              value={noteText}
-              onChange={(e) => setNoteText(e.target.value)}
-              rows={3}
-              style={{
-                marginTop: 4,
-                width: "100%",
-                padding: "6px 8px",
-                borderRadius: 8,
-                border: "1px solid #4b5563",
-                background: "#020617",
-                color: "#e5e7eb",
-                resize: "vertical",
-              }}
-            />
-          </div>
-        </div>
-
-        {/* ✅ Public / Private seçici (DOĞRU YERİ BURASI) */}
-        <div style={{ display: "flex", gap: 10, alignItems: "center", marginBottom: 12 }}>
-          <button
-            type="button"
-            onClick={() => setIsPublic(true)}
-            style={{
-              padding: "6px 10px",
-              borderRadius: 999,
-              border: "1px solid #1f2937",
-              background: isPublic ? "#38bdf8" : "#0f172a",
-              color: isPublic ? "#020617" : "#9ca3af",
-              cursor: "pointer",
-              fontWeight: 800,
-              fontSize: 12,
-            }}
-          >
-            Public
-          </button>
-
-          <button
-            type="button"
-            onClick={() => setIsPublic(false)}
-            style={{
-              padding: "6px 10px",
-              borderRadius: 999,
-              border: "1px solid #1f2937",
-              background: !isPublic ? "#38bdf8" : "#0f172a",
-              color: !isPublic ? "#020617" : "#9ca3af",
-              cursor: "pointer",
-              fontWeight: 800,
-              fontSize: 12,
-            }}
-          >
-            Private
-          </button>
-
-          <span style={{ fontSize: 12, color: "#6b7280" }}>
-            {isPublic ? "Herkese açık" : "Sadece ben"}
-          </span>
-        </div>
-
-        <button
-          onClick={createNote}
+        {/* HERO */}
+        <div
           style={{
-            padding: "8px 16px",
-            borderRadius: 999,
-            border: "none",
-            background: "#38bdf8",
-            color: "#020617",
-            fontWeight: 600,
-            cursor: "pointer",
-            fontSize: 14,
+            marginTop: 18,
+            display: "flex",
+            gap: 24,
+            alignItems: "center",
+            justifyContent: "center",
+            textAlign: "left",
+            flexWrap: "wrap",
           }}
         >
-          Notu ekle
-        </button>
-      </div>
-
-      {/* Not listesi */}
-      <div style={{ marginTop: 24 }}>
-        <h2 style={{ fontSize: 18, marginBottom: 12 }}>
-          Şarkıdaki notlar {onlyMine ? "(Sadece benim)" : ""}
-        </h2>
-
-        {filteredNotes.length === 0 && (
-          <div style={{ color: "#6b7280", fontSize: 14 }}>
-            {onlyMine ? "Bu şarkıda sana ait not yok." : "Bu şarkı için henüz not yok."}
-          </div>
-        )}
-
-        <ul style={{ listStyle: "none", padding: 0, marginTop: 8 }}>
-          {filteredNotes.map((note) => (
-            <li
-              key={note.id}
+          {song.coverUrl && (
+            <img
+              src={song.coverUrl}
+              alt=""
               style={{
-                padding: 12,
-                marginBottom: 8,
-                borderRadius: 12,
-                background: "#030712",
-                border: "1px solid #1f2937",
+                width: 140,
+                height: 140,
+                borderRadius: 18,
+                objectFit: "cover",
+                boxShadow: "0 10px 30px rgba(0,0,0,0.35)",
+              }}
+            />
+          )}
+
+          <div style={{ minWidth: 260 }}>
+            <h1 style={{ fontSize: 34, margin: 0, lineHeight: 1.15 }}>
+              {song.title}
+            </h1>
+            <div style={{ color: "#c7c2d6", marginTop: 6 }}>{song.artist}</div>
+            <div style={{ color: "#9ca3af", fontSize: 14, marginTop: 2 }}>
+              {song.album}
+            </div>
+
+            {song.durationSec && (
+              <div style={{ color: "#9ca3af", fontSize: 13, marginTop: 10 }}>
+                Süre: {Math.floor(song.durationSec / 60)}:
+                {(song.durationSec % 60).toString().padStart(2, "0")}
+              </div>
+            )}
+          </div>
+        </div>
+
+        {/* Yeni not formu (Card) */}
+        <div
+          style={{
+            marginTop: 28,
+            padding: 18,
+            borderRadius: 18,
+            background: UI.cardBg,
+            border: `1px solid ${UI.cardBorder}`,
+
+            backdropFilter: "blur(12px)",
+          }}
+        >
+          <h2 style={{ fontSize: 18, margin: 0, marginBottom: 14 }}>Yeni not ekle</h2>
+
+          <div style={{ display: "flex", gap: 12, marginBottom: 12, alignItems: "stretch" }}>
+            <div style={{ width: 140 }}>
+              <label style={{ fontSize: 12, color: "#c7c2d6" }}>
+                Zaman (saniye)
+              </label>
+              <input
+                type="number"
+                value={timestamp}
+                onChange={(e) => setTimestamp(e.target.value)}
+                min="0"
+                style={{
+                  marginTop: 6,
+                  padding: "10px 12px",
+                  height: 68,
+                  borderRadius: 12,
+                  border: "1px solid rgba(255,255,255,0.12)",
+                  background: "rgba(15,23,42,0.65)",
+                  color: "#eae7f2",
+                  width: "100%",
+                }}
+              />
+            </div>
+
+            <div style={{ flex: 1, minWidth: 260 }}>
+              <label style={{ fontSize: 12, color: "#c7c2d6" }}>Not</label>
+              <textarea
+                value={noteText}
+                onChange={(e) => setNoteText(e.target.value)}
+                rows={3}
+                style={{
+                  marginTop: 6,
+                  height: 69,
+                  resize: "none",
+                  width: "100%",
+                  padding: "10px 12px",
+                  borderRadius: 12,
+                  border: "1px solid rgba(255,255,255,0.12)",
+                  background: "rgba(15,23,42,0.65)",
+                  color: "#eae7f2",
+                  resize: "vertical",
+                }}
+              />
+            </div>
+          </div>
+
+          {/* Public/Private */}
+          <div style={{ display: "flex", gap: 10, alignItems: "center", marginBottom: 14 }}>
+            <button
+              type="button"
+              onClick={() => setIsPublic(true)}
+              style={{
+                padding: "7px 12px",
+                borderRadius: 999,
+                border: "1px solid rgba(255,255,255,0.12)",
+                background: isPublic ? "#b89cff" : "rgba(15,23,42,0.65)",
+                color: isPublic ? "#120a1d" : "#c7c2d6",
+                cursor: "pointer",
+                fontWeight: 800,
+                fontSize: 12,
               }}
             >
-              <div style={{ display: "flex", justifyContent: "space-between", gap: 12, alignItems: "flex-start" }}>
-                <div>
-                  <div style={{ fontSize: 12, color: "#9ca3af", marginBottom: 4 }}>
-                    {note.timestampSec}s — {note.username}
-                  </div>
-                  <div style={{ fontSize: 14 }}>{note.text}</div>
-                </div>
+              Public
+            </button>
 
-                <button
-                  onClick={() => toggleLike(note.id)}
+            <button
+              type="button"
+              onClick={() => setIsPublic(false)}
+              style={{
+                padding: "7px 12px",
+                borderRadius: 999,
+                border: "1px solid rgba(255,255,255,0.12)",
+                background: !isPublic ? "#b89cff" : "rgba(15,23,42,0.65)",
+                color: !isPublic ? "#120a1d" : "#c7c2d6",
+                cursor: "pointer",
+                fontWeight: 800,
+                fontSize: 12,
+              }}
+            >
+              Private
+            </button>
+
+            <span style={{ fontSize: 12, color: "#9ca3af" }}>
+              {isPublic ? "Herkese açık" : "Sadece ben"}
+            </span>
+          </div>
+
+          <button
+            onClick={createNote}
+            style={{
+              padding: "10px 16px",
+              borderRadius: 999,
+              border: "none",
+              background: UI.accent,
+              color: UI.accentText,
+              fontWeight: 800,
+              cursor: "pointer",
+              fontSize: 14,
+            }}
+          >
+            Notu ekle
+          </button>
+        </div>
+
+        {/* Not listesi */}
+        <div style={{ marginTop: 24 }}>
+          <h2 style={{ fontSize: 18, marginBottom: 12 }}>
+            Şarkıdaki notlar {onlyMine ? "(Sadece benim)" : ""}
+          </h2>
+
+          {filteredNotes.length === 0 && (
+            <div style={{ color: "#9ca3af", fontSize: 14 }}>
+              {onlyMine ? "Bu şarkıda sana ait not yok." : "Bu şarkı için henüz not yok."}
+            </div>
+          )}
+
+          <ul style={{ listStyle: "none", padding: 0, marginTop: 10 }}>
+            {filteredNotes.map((note) => (
+              <li
+                key={note.id}
+                style={{
+                  padding: 14,
+                  marginBottom: 10,
+                  borderRadius: 16,
+                  background: "rgba(255,255,255,0.04)",
+                  border: "1px solid rgba(255,255,255,0.08)",
+                  backdropFilter: "blur(12px)",
+                }}
+              >
+                <div
                   style={{
-                    padding: "6px 10px",
-                    borderRadius: 999,
-                    border: "1px solid #1f2937",
-                    background: note.liked ? "#ef4444" : "#0f172a",
-                    color: "#e5e7eb",
-                    cursor: "pointer",
-                    minWidth: 72,
-                    fontSize: 13,
+                    display: "flex",
+                    justifyContent: "space-between",
+                    gap: 12,
+                    alignItems: "flex-start",
                   }}
-                  title="Like"
                 >
-                  {note.liked ? "❤️" : "🤍"} {note.likesCount}
-                </button>
-              </div>
-            </li>
-          ))}
-        </ul>
+                  <div>
+                    <div style={{ fontSize: 12, color: "#c7c2d6", marginBottom: 6 }}>
+                      {note.timestampSec}s — {note.username}
+                    </div>
+                    <div style={{ fontSize: 14, lineHeight: 1.45 }}>{note.text}</div>
+                  </div>
+
+                  <button
+                    onClick={() => toggleLike(note.id)}
+                    style={{
+                      padding: "7px 12px",
+                      borderRadius: 999,
+                      border: "1px solid rgba(255,255,255,0.12)",
+                      background: note.liked ? "rgba(184,156,255,0.85)" : UI.inputBg,
+                      color: note.liked ? UI.accentText : "#eae7f2",
+                      border: `1px solid ${UI.inputBorder}`,
+                      color: "#eae7f2",
+                      cursor: "pointer",
+                      minWidth: 74,
+                      fontSize: 13,
+                      fontWeight: 700,
+                    }}
+                    title="Like"
+                  >
+                    {note.liked ? "❤️" : "🤍"} {note.likesCount}
+                  </button>
+                </div>
+              </li>
+            ))}
+          </ul>
+        </div>
+
+        <BottomNav />
       </div>
     </div>
   );

@@ -1,11 +1,32 @@
+/* =========================
+   GLOBAL RESET + FULL WIDTH
+   ========================= */
+* { box-sizing: border-box; }
+
+html, body, #root {
+  width: 100%;
+  height: 100%;
+  margin: 0;
+  padding: 0;
+}
+
+/* #root'u asla ortalama / daraltma */
+#root {
+  min-height: 100vh;
+  width: 100%;
+}
+
+/* =========================
+   SURPRISE THEME: Midnight Plum
+   ========================= */
 :root {
-  font-family: system-ui, Avenir, Helvetica, Arial, sans-serif;
+  font-family: system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial, sans-serif;
   line-height: 1.5;
   font-weight: 400;
 
-  color-scheme: light dark;
-  color: rgba(255, 255, 255, 0.87);
-  background-color: #242424;
+  /* Vite default color-scheme ve background'ını kapatıyoruz */
+  color: #eae7f2;
+  background: transparent;
 
   font-synthesis: none;
   text-rendering: optimizeLegibility;
@@ -13,56 +34,112 @@
   -moz-osx-font-smoothing: grayscale;
 }
 
+/* body artık flex ile ortalamayacak! */
+body {
+  background: radial-gradient(
+    circle at top left,
+    #1b1029 0%,
+    #0b0614 45%,
+    #05030a 100%
+  );
+  color: #eae7f2;
+  overflow-x: hidden;
+}
+
+/* Link */
 a {
   font-weight: 500;
-  color: #646cff;
-  text-decoration: inherit;
+  color: #b89cff;
+  text-decoration: none;
 }
 a:hover {
-  color: #535bf2;
+  color: #d0b9ff;
+  text-decoration: underline;
 }
 
-body {
-  margin: 0;
-  display: flex;
-  place-items: center;
-  min-width: 320px;
-  min-height: 100vh;
-}
-
-h1 {
-  font-size: 3.2em;
-  line-height: 1.1;
-}
-
+/* Button (genel) */
 button {
-  border-radius: 8px;
-  border: 1px solid transparent;
-  padding: 0.6em 1.2em;
+  border-radius: 10px;
+  border: 1px solid rgba(255, 255, 255, 0.10);
+  padding: 0.6em 1.1em;
   font-size: 1em;
-  font-weight: 500;
+  font-weight: 600;
   font-family: inherit;
-  background-color: #1a1a1a;
+  background: rgba(255, 255, 255, 0.06);
+  color: inherit;
   cursor: pointer;
-  transition: border-color 0.25s;
+  transition: transform 0.12s ease, border-color 0.2s ease, background 0.2s ease;
 }
 button:hover {
-  border-color: #646cff;
+  border-color: rgba(184, 156, 255, 0.65);
+  background: rgba(255, 255, 255, 0.09);
+}
+button:active {
+  transform: scale(0.98);
 }
 button:focus,
 button:focus-visible {
-  outline: 4px auto -webkit-focus-ring-color;
+  outline: 2px solid rgba(184, 156, 255, 0.8);
+  outline-offset: 2px;
 }
 
-@media (prefers-color-scheme: light) {
-  :root {
-    color: #213547;
-    background-color: #ffffff;
+/* Sayfa wrapper (bottom nav için) */
+.page {
+  min-height: 100vh;
+  width: 100%;
+  padding-bottom: 96px;
+}
+
+/* Ortalanmış içerik alanı */
+.content {
+  max-width: 720px;          /* mobil + desktop dengesi */
+  margin: 0 auto;            /* ortala */
+  padding: 32px 20px;        /* kenar boşluk */
+}
+
+/* Büyük ekranlarda biraz daha geniş */
+@media (min-width: 1024px) {
+  .content {
+    max-width: 860px;
   }
-  a:hover {
-    color: #747bff;
-  }
-  button {
-    background-color: #f9f9f9;
-  }
+}
+
+/* Search sayfası hero ortalama + büyütme */
+.searchHero {
+  min-height: calc(100vh - 96px); /* bottom nav hariç */
+  display: flex;
+  flex-direction: column;
+  align-items: center;            /* yatay ortala */
+  justify-content: center;        /* dikey ortala */
+  text-align: center;
+  gap: 16px;
+}
+
+/* Başlık büyüsün */
+.searchHero h1 {
+  font-size: 40px;
+  margin: 0;
+}
+
+/* Input + buton satırı */
+.searchRow {
+  display: flex;
+  gap: 12px;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+}
+
+/* Büyük ekranda input genişlesin */
+.searchInput {
+  width: min(520px, 70vw);
+  height: 44px;
+  font-size: 15px;
+}
+
+.searchBtn {
+  height: 44px;
+  padding: 0 18px;
+  font-size: 15px;
+  border-radius: 10px;
 }

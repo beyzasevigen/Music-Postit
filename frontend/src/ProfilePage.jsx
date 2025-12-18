@@ -9,7 +9,7 @@ export default function ProfilePage() {
   const navigate = useNavigate();
   const auth = getAuthHeader();
 
-  const [me, setMe] = useState({ username: "", email: "" });
+  const [me, setMe] = useState({ username: "", email: "", imageUrl: "" });
 
   // ✅ Dinleme geçmişi
   const [history, setHistory] = useState([]);
@@ -22,10 +22,22 @@ export default function ProfilePage() {
   const [postitLoading, setPostitLoading] = useState(false);
   const [postitError, setPostitError] = useState("");
 
+  // ✅ Profil düzenleme
   const [editOpen, setEditOpen] = useState(false);
   const [editUsername, setEditUsername] = useState("");
   const [editImageUrl, setEditImageUrl] = useState("");
 
+  // 🎨 tek yerden tema
+  const UI = {
+    cardBg: "rgba(184,156,255,0.08)",
+    cardBorder: "rgba(184,156,255,0.18)",
+    inputBg: "rgba(15,23,42,0.55)",
+    inputBorder: "rgba(184,156,255,0.22)",
+    accent: "#b89cff",
+    accentText: "#120a1d",
+    muted: "#9ca3af",
+    muted2: "#6b7280",
+  };
 
   // ✅ auth yoksa login
   useEffect(() => {
@@ -40,30 +52,29 @@ export default function ProfilePage() {
       setLoading(true);
       setError("");
 
-      // 1) Kullanıcı bilgisi localStorage
+      // 1) Me
       try {
         const meRes = await fetch(`${API_BASE}/api/users/me`, {
-            headers: { Authorization: auth },
-            });
+          headers: { Authorization: auth },
+        });
+        if (!meRes.ok) throw new Error("Me bilgisi alınamadı");
 
-            if (!meRes.ok) throw new Error("Me bilgisi alınamadı");
+        const meData = await meRes.json();
 
-            const meData = await meRes.json();
+        setMe({
+          username: meData.username || "",
+          email: meData.email || "",
+          imageUrl: meData.imageUrl || "",
+        });
 
-            setMe({
-            username: meData.username || "",
-            email: meData.email || "",
-            imageUrl: meData.imageUrl || "",
-            });
+        localStorage.setItem("auth_userId", String(meData.id || ""));
+        localStorage.setItem("auth_username", meData.username || "");
+        localStorage.setItem("auth_email", meData.email || "");
+      } catch (e) {
+        console.error(e);
+      }
 
-            // SongPage filtreleme için iyi olur:
-            localStorage.setItem("auth_userId", String(meData.id || ""));
-            localStorage.setItem("auth_username", meData.username || "");
-            localStorage.setItem("auth_email", meData.email || "");
-
-      } catch {}
-
-      // 2) Play history çek
+      // 2) Play history
       try {
         const res = await fetch(`${API_BASE}/api/play-history/me/recent-songs`, {
           headers: { Authorization: auth },
@@ -103,14 +114,17 @@ export default function ProfilePage() {
 
     if (!res.ok) throw new Error("Profil güncellenemedi");
 
-    // UI'ı anında güncelle
+    // UI'ı güncelle
     setMe((prev) => ({
       ...prev,
       username: editUsername,
       imageUrl: editImageUrl,
     }));
 
+    // ✅ localStorage GÜNCELLEMELERİ BURADA
     localStorage.setItem("auth_username", editUsername || "");
+    localStorage.setItem("auth_avatar", editImageUrl || "");
+
     setEditOpen(false);
   } catch (e) {
     alert("Profil güncellenirken hata oluştu");
@@ -119,7 +133,8 @@ export default function ProfilePage() {
 };
 
 
-  // ✅ Postitlerim (public/private) şarkı listesi çek
+
+  // ✅ Postitlerim şarkı listesi çek
   const loadPostits = async (tab) => {
     if (!auth) return;
 
@@ -127,7 +142,6 @@ export default function ProfilePage() {
     setPostitError("");
 
     try {
-      // 1) Benim tüm notlarım
       const res = await fetch(`${API_BASE}/api/notes/mine`, {
         headers: { Authorization: auth },
       });
@@ -140,16 +154,13 @@ export default function ProfilePage() {
       const notesData = await res.json();
       const allNotes = Array.isArray(notesData) ? notesData : [];
 
-      // 2) Sekmeye göre filtre (public/private)
       const wantPublic = tab === "public";
       const filtered = allNotes.filter((n) => n.isPublic === wantPublic);
 
-      // 3) Unique songId listesi
       const songIds = Array.from(
         new Set(filtered.map((n) => n.songId).filter(Boolean))
       );
 
-      // 4) Şarkı detaylarını çek
       const songs = await Promise.all(
         songIds.map(async (sid) => {
           const sr = await fetch(`${API_BASE}/api/songs/${sid}`, {
@@ -159,7 +170,7 @@ export default function ProfilePage() {
 
           const s = await sr.json();
           return {
-            id: sid, // UI aynı kalsın diye id kullandım
+            id: sid,
             title: s.title ?? "Song",
             artist: s.artist ?? "",
             imageUrl: s.coverUrl ?? "",
@@ -177,296 +188,268 @@ export default function ProfilePage() {
     }
   };
 
-  // Tab değişince postitleri yenile
   useEffect(() => {
     if (!auth) return;
     loadPostits(postitTab);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [postitTab, auth]);
 
+  const styles = {
+    // sayfa artık global theme ile uyumlu: page/content
+    content: { paddingBottom: 110 },
+
+    card: {
+      background: UI.cardBg,
+      border: `1px solid ${UI.cardBorder}`,
+      borderRadius: 18,
+      padding: 18,
+      backdropFilter: "blur(12px)",
+    },
+
+    profileRow: { display: "flex", gap: 14, alignItems: "center" },
+    avatar: { width: 84, height: 84, borderRadius: "50%", objectFit: "cover" },
+    name: { fontSize: 22, fontWeight: 900 },
+    email: { color: UI.muted, marginTop: 4, fontSize: 14 },
+
+    sectionTitle: { fontSize: 18, fontWeight: 900, marginBottom: 12 },
+    muted: { color: UI.muted2, fontSize: 14 },
+    error: { color: "#f97316", fontSize: 14 },
+
+    // butonlar / tablar mor
+    pill: {
+      padding: "7px 12px",
+      borderRadius: 999,
+      border: `1px solid ${UI.inputBorder}`,
+      background: UI.inputBg,
+      color: UI.accent,
+      cursor: "pointer",
+      fontSize: 13,
+      fontWeight: 900,
+    },
+
+    tabRow: { display: "flex", gap: 10, marginBottom: 12 },
+    tabBtn: {
+      padding: "7px 12px",
+      borderRadius: 999,
+      border: `1px solid ${UI.inputBorder}`,
+      background: UI.inputBg,
+      color: UI.muted,
+      cursor: "pointer",
+      fontWeight: 900,
+      fontSize: 12,
+    },
+    tabActive: { background: UI.accent, color: UI.accentText, border: "none" },
+
+    input: {
+      width: "100%",
+      marginTop: 6,
+      padding: "8px 10px",
+      borderRadius: 12,
+      border: `1px solid ${UI.inputBorder}`,
+      background: UI.inputBg,
+      color: "#e5e7eb",
+      outline: "none",
+    },
+
+    // list item’ları “cam kart” gibi
+    list: { listStyle: "none", padding: 0, margin: 0, marginTop: 8 },
+    item: {
+      borderTop: "1px solid rgba(184,156,255,0.16)",
+    },
+    itemLink: {
+      display: "flex",
+      justifyContent: "space-between",
+      alignItems: "center",
+      gap: 12,
+      padding: "14px 0",
+      textDecoration: "none",
+      color: "#e5e7eb",
+    },
+    cover: { width: 44, height: 44, borderRadius: 12, objectFit: "cover" },
+    songTitle: { fontWeight: 800 },
+    songMeta: { fontSize: 13, color: UI.muted },
+    chev: { color: "rgba(184,156,255,0.45)", fontSize: 22, lineHeight: 1 },
+  };
+
   return (
-    <div style={styles.page}>
-      {/* Profil kartı */}
-      <div style={styles.card}>
-        <div style={styles.profileRow}>
-          <img
-            src={me.imageUrl || "https://placehold.co/84x84"}
-            alt="avatar"
-            style={styles.avatar}
+    <div className="page">
+      <div className="content" style={styles.content}>
+        {/* Profil kartı */}
+        <div style={styles.card}>
+          <div style={styles.profileRow}>
+            <img
+              src={me.imageUrl || "https://placehold.co/84x84"}
+              alt="avatar"
+              style={styles.avatar}
             />
-          <div>
-            <div style={styles.name}>{me.username || "User"}</div>
-            <div style={styles.email}>{me.email || "—"}</div>
+            <div>
+              <div style={styles.name}>{me.username || "User"}</div>
+              <div style={styles.email}>{me.email || "—"}</div>
+            </div>
           </div>
         </div>
-      </div>
-      <button
-        onClick={() => {
+
+        <button
+          onClick={() => {
             setEditUsername(me.username);
             setEditImageUrl(me.imageUrl || "");
             setEditOpen(true);
-        }}
-        style={{
-            marginTop: 12,
-            padding: "6px 12px",
-            borderRadius: 8,
-            border: "1px solid #1f2937",
-            background: "#0f172a",
-            color: "#e5e7eb",
-            cursor: "pointer",
-            fontSize: 13,
-            fontWeight: 600,
-        }}
+          }}
+          style={{ ...styles.pill, marginTop: 12 }}
         >
-        Profili Düzenle
+          Profili Düzenle
         </button>
+
         {editOpen && (
-  <div style={{ ...styles.card, marginTop: 18 }}>
-    <div style={styles.sectionTitle}>Profili Düzenle</div>
+          <div style={{ ...styles.card, marginTop: 16 }}>
+            <div style={styles.sectionTitle}>Profili Düzenle</div>
 
-    <div style={{ marginBottom: 10 }}>
-      <label style={{ fontSize: 12, color: "#9ca3af" }}>Kullanıcı adı</label>
-      <input
-        value={editUsername}
-        onChange={(e) => setEditUsername(e.target.value)}
-        style={{
-          width: "100%",
-          marginTop: 4,
-          padding: "6px 8px",
-          borderRadius: 8,
-          border: "1px solid #4b5563",
-          background: "#020617",
-          color: "#e5e7eb",
-        }}
-      />
-    </div>
+            <div style={{ marginBottom: 12 }}>
+              <label style={{ fontSize: 12, color: UI.muted }}>Kullanıcı adı</label>
+              <input
+                value={editUsername}
+                onChange={(e) => setEditUsername(e.target.value)}
+                style={styles.input}
+              />
+            </div>
 
-    <div style={{ marginBottom: 10 }}>
-      <label style={{ fontSize: 12, color: "#9ca3af" }}>
-        Profil foto URL
-      </label>
-      <input
-        value={editImageUrl}
-        onChange={(e) => setEditImageUrl(e.target.value)}
-        placeholder="https://..."
-        style={{
-          width: "100%",
-          marginTop: 4,
-          padding: "6px 8px",
-          borderRadius: 8,
-          border: "1px solid #4b5563",
-          background: "#020617",
-          color: "#e5e7eb",
-        }}
-      />
-    </div>
+            <div style={{ marginBottom: 14 }}>
+              <label style={{ fontSize: 12, color: UI.muted }}>Profil foto URL</label>
+              <input
+                value={editImageUrl}
+                onChange={(e) => setEditImageUrl(e.target.value)}
+                placeholder="https://..."
+                style={styles.input}
+              />
+            </div>
 
-    <div style={{ display: "flex", gap: 8 }}>
-      <button
-        onClick={saveProfile}
-        style={{
-          padding: "6px 12px",
-          borderRadius: 8,
-          border: "none",
-          background: "#38bdf8",
-          color: "#020617",
-          fontWeight: 700,
-          cursor: "pointer",
-        }}
-      >
-        Kaydet
-      </button>
+            <div style={{ display: "flex", gap: 10, flexWrap: "wrap" }}>
+              <button
+                onClick={saveProfile}
+                style={{
+                  ...styles.pill,
+                  background: UI.accent,
+                  color: UI.accentText,
+                  border: "none",
+                }}
+              >
+                Kaydet
+              </button>
 
-      <button
-        onClick={() => setEditOpen(false)}
-        style={{
-          padding: "6px 12px",
-          borderRadius: 8,
-          border: "1px solid #1f2937",
-          background: "#0f172a",
-          color: "#9ca3af",
-          cursor: "pointer",
-        }}
-      >
-        Vazgeç
-      </button>
-    </div>
-  </div>
-)}
+              <button
+                onClick={() => setEditOpen(false)}
+                style={{ ...styles.pill, color: UI.muted }}
+              >
+                Vazgeç
+              </button>
+            </div>
+          </div>
+        )}
 
+        {/* Postitlerim */}
+        <div style={{ ...styles.card, marginTop: 18 }}>
+          <div style={styles.sectionTitle}>Postitlerim</div>
 
+          <div style={styles.tabRow}>
+            <button
+              onClick={() => setPostitTab("public")}
+              style={{
+                ...styles.tabBtn,
+                ...(postitTab === "public" ? styles.tabActive : {}),
+              }}
+            >
+              Public
+            </button>
+            <button
+              onClick={() => setPostitTab("private")}
+              style={{
+                ...styles.tabBtn,
+                ...(postitTab === "private" ? styles.tabActive : {}),
+              }}
+            >
+              Private
+            </button>
+          </div>
 
-      {/* Postitlerim */}
-      <div style={{ ...styles.card, marginTop: 18 }}>
-        <div style={styles.sectionTitle}>Postitlerim</div>
+          {postitLoading && <div style={styles.muted}>Yükleniyor...</div>}
+          {postitError && <div style={styles.error}>{postitError}</div>}
 
-        <div style={styles.tabRow}>
-          <button
-            onClick={() => setPostitTab("public")}
-            style={{
-              ...styles.tabBtn,
-              ...(postitTab === "public" ? styles.tabActive : {}),
-            }}
-          >
-            Public
-          </button>
-          <button
-            onClick={() => setPostitTab("private")}
-            style={{
-              ...styles.tabBtn,
-              ...(postitTab === "private" ? styles.tabActive : {}),
-            }}
-          >
-            Private
-          </button>
+          {!postitLoading && !postitError && postitSongs.length === 0 && (
+            <div style={styles.muted}>Bu sekmede henüz postitin yok.</div>
+          )}
+
+          <ul style={styles.list}>
+            {postitSongs.map((s, idx) => {
+              const songId = s.id;
+              if (!songId) return null;
+
+              return (
+                <li key={`${songId}-${idx}`} style={styles.item}>
+                  <Link
+                    to={`/song/${songId}?mine=true&vis=${postitTab}`}
+                    style={styles.itemLink}
+                    title="Şarkıya git (sadece benim notlarım)"
+                  >
+                    <div style={{ display: "flex", gap: 12, alignItems: "center" }}>
+                      {s.imageUrl && <img src={s.imageUrl} alt="" style={styles.cover} />}
+                      <div>
+                        <div style={styles.songTitle}>{s.title}</div>
+                        <div style={styles.songMeta}>{s.artist}</div>
+                      </div>
+                    </div>
+                    <div style={styles.chev}>›</div>
+                  </Link>
+                </li>
+              );
+            })}
+          </ul>
         </div>
 
-        {postitLoading && <div style={styles.muted}>Yükleniyor...</div>}
-        {postitError && <div style={styles.error}>{postitError}</div>}
+        {/* Son dinlenen */}
+        <div style={{ ...styles.card, marginTop: 18 }}>
+          <div style={styles.sectionTitle}>Son dinlenen şarkılar</div>
 
-        {!postitLoading && !postitError && postitSongs.length === 0 && (
-          <div style={styles.muted}>Bu sekmede henüz postitin yok.</div>
-        )}
+          {loading && <div style={styles.muted}>Yükleniyor...</div>}
+          {error && <div style={styles.error}>{error}</div>}
 
-        <ul style={styles.list}>
-          {postitSongs.map((s, idx) => {
-            const songId = s.id; // burada id = songId
-            const title = s.title ?? "Song";
-            const artist = s.artist ?? "";
-            const coverUrl = s.imageUrl ?? "";
+          {!loading && !error && history.length === 0 && (
+            <div style={styles.muted}>Henüz dinleme geçmişin yok.</div>
+          )}
 
-            if (!songId) return null;
+          <ul style={styles.list}>
+            {history.map((h) => {
+              const songId = h.songId ?? h.id ?? h.song?.id ?? h.song?.songId;
+              const title = h.title ?? h.songTitle ?? h.song?.title ?? "Song";
+              const artist = h.artist ?? h.songArtist ?? h.song?.artist ?? "";
+              const coverUrl =
+                h.imageUrl ?? h.coverUrl ?? h.songCoverUrl ?? h.song?.coverUrl;
 
-            return (
-              <li key={`${songId}-${idx}`} style={styles.item}>
-                <Link
-                  to={`/song/${songId}?mine=true&vis=${postitTab}`}
-                  style={styles.itemLink}
-                  title="Şarkıya git (sadece benim notlarım)"
-                >
-                  <div style={{ display: "flex", gap: 12, alignItems: "center" }}>
-                    {coverUrl && (
-                      <img src={coverUrl} alt="" style={styles.cover} />
-                    )}
-                    <div>
-                      <div style={styles.songTitle}>{title}</div>
-                      <div style={styles.songMeta}>{artist}</div>
+              if (!songId) return null;
+
+              return (
+                <li key={`${songId}-${title}-${artist}`} style={styles.item}>
+                  <Link
+                    to={`/song/${songId}?mine=true`}
+                    style={styles.itemLink}
+                    title="Şarkıya git (sadece benim notlarım)"
+                  >
+                    <div style={{ display: "flex", gap: 12, alignItems: "center" }}>
+                      {coverUrl && <img src={coverUrl} alt="" style={styles.cover} />}
+                      <div>
+                        <div style={styles.songTitle}>{title}</div>
+                        <div style={styles.songMeta}>{artist}</div>
+                      </div>
                     </div>
-                  </div>
+                    <div style={styles.chev}>›</div>
+                  </Link>
+                </li>
+              );
+            })}
+          </ul>
+        </div>
 
-                  <div style={styles.chev}>›</div>
-                </Link>
-              </li>
-            );
-          })}
-        </ul>
+        <BottomNav />
       </div>
-
-      {/* History */}
-      <div style={{ ...styles.card, marginTop: 18 }}>
-        <div style={styles.sectionTitle}>Son dinlenen şarkılar</div>
-
-        {loading && <div style={styles.muted}>Yükleniyor...</div>}
-        {error && <div style={styles.error}>{error}</div>}
-
-        {!loading && !error && history.length === 0 && (
-          <div style={styles.muted}>Henüz dinleme geçmişin yok.</div>
-        )}
-
-        <ul style={styles.list}>
-          {history.map((h) => {
-            const songId = h.songId ?? h.id ?? h.song?.id ?? h.song?.songId;
-            const title = h.title ?? h.songTitle ?? h.song?.title ?? "Song";
-            const artist = h.artist ?? h.songArtist ?? h.song?.artist ?? "";
-            const coverUrl =
-              h.imageUrl ?? h.coverUrl ?? h.songCoverUrl ?? h.song?.coverUrl;
-
-            if (!songId) return null;
-
-            return (
-              <li key={`${songId}-${title}-${artist}`} style={styles.item}>
-                <Link
-                  to={`/song/${songId}?mine=true`}
-                  style={styles.itemLink}
-                  title="Şarkıya git (sadece benim notlarım)"
-                >
-                  <div style={{ display: "flex", gap: 12, alignItems: "center" }}>
-                    {coverUrl && (
-                      <img src={coverUrl} alt="" style={styles.cover} />
-                    )}
-                    <div>
-                      <div style={styles.songTitle}>{title}</div>
-                      <div style={styles.songMeta}>{artist}</div>
-                    </div>
-                  </div>
-
-                  <div style={styles.chev}>›</div>
-                </Link>
-              </li>
-            );
-          })}
-        </ul>
-      </div>
-
-      {/* ✅ alt menü */}
-      <BottomNav />
     </div>
   );
 }
-
-const styles = {
-  page: {
-    minHeight: "100vh",
-    background: "#020617",
-    color: "#e5e7eb",
-    padding: "32px",
-    paddingBottom: 110,
-    fontFamily:
-      'system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif',
-  },
-
-  card: {
-    background: "#030712",
-    border: "1px solid #1f2937",
-    borderRadius: 16,
-    padding: 18,
-  },
-  profileRow: { display: "flex", gap: 14, alignItems: "center" },
-  avatar: { width: 84, height: 84, borderRadius: "50%", objectFit: "cover" },
-  name: { fontSize: 22, fontWeight: 800 },
-  email: { color: "#9ca3af", marginTop: 4, fontSize: 14 },
-  hint: { marginTop: 10, color: "#6b7280", fontSize: 13 },
-
-  sectionTitle: { fontSize: 16, fontWeight: 800, marginBottom: 10 },
-  muted: { color: "#6b7280", fontSize: 14 },
-  error: { color: "#f97316", fontSize: 14 },
-
-  tabRow: { display: "flex", gap: 10, marginBottom: 10 },
-  tabBtn: {
-    padding: "6px 10px",
-    borderRadius: 999,
-    border: "1px solid #1f2937",
-    background: "#0f172a",
-    color: "#9ca3af",
-    cursor: "pointer",
-    fontWeight: 800,
-    fontSize: 12,
-  },
-  tabActive: { background: "#38bdf8", color: "#020617", border: "none" },
-
-  list: { listStyle: "none", padding: 0, margin: 0, marginTop: 8 },
-  item: { borderTop: "1px solid #1f2937" },
-  itemLink: {
-    display: "flex",
-    justifyContent: "space-between",
-    alignItems: "center",
-    gap: 12,
-    padding: "12px 0",
-    textDecoration: "none",
-    color: "#e5e7eb",
-  },
-  cover: { width: 44, height: 44, borderRadius: 10, objectFit: "cover" },
-  songTitle: { fontWeight: 700 },
-  songMeta: { fontSize: 13, color: "#9ca3af" },
-  chev: { color: "#475569", fontSize: 22, lineHeight: 1 },
-};

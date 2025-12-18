@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { getAuthHeader } from "./auth";
 import BottomNav from "./BottomNav";
@@ -9,6 +9,8 @@ export default function SearchPage() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
   const [success, setSuccess] = useState("");
+  const [username, setUsername] = useState("");
+  const [avatarUrl, setAvatarUrl] = useState("");
 
   const navigate = useNavigate();
   const auth = getAuthHeader();
@@ -17,6 +19,26 @@ export default function SearchPage() {
   useEffect(() => {
     if (!auth) navigate("/login");
   }, [auth, navigate]);
+
+  useEffect(() => {
+    const u = localStorage.getItem("auth_username") || "";
+    setUsername(u);
+  }, []);
+
+  useEffect(() => {
+  setUsername(localStorage.getItem("auth_username") || "");
+  setAvatarUrl(
+    localStorage.getItem("auth_avatar") ||
+      "https://placehold.co/32x32"
+  );
+}, []);
+
+
+  // Sonuç var mı? (loading/error da varsa hero yukarı çıksın)
+  const hasResults = useMemo(
+    () => results.length > 0 || loading || !!error,
+    [results.length, loading, error]
+  );
 
   // 🎵 Spotify'dan gelen şarkıyı backend'e kaydet
   const importSong = async (song) => {
@@ -37,9 +59,7 @@ export default function SearchPage() {
         }),
       });
 
-      if (!response.ok) {
-        throw new Error("Şarkı kaydedilemedi: " + response.status);
-      }
+      if (!response.ok) throw new Error("Şarkı kaydedilemedi: " + response.status);
 
       const saved = await response.json();
       setSuccess(`"${saved.title}" sisteme eklendi`);
@@ -57,29 +77,22 @@ export default function SearchPage() {
 
     setLoading(true);
     setError("");
+    setSuccess("");
 
     try {
       const response = await fetch(
-        `http://localhost:8080/api/external/search?query=${encodeURIComponent(
-          query
-        )}`,
-        {
-          method: "GET",
-          headers: {
-            Authorization: auth,
-          },
-        }
+        `http://localhost:8080/api/external/search?query=${encodeURIComponent(query)}`,
+        { method: "GET", headers: { Authorization: auth } }
       );
 
-      if (!response.ok) {
-        throw new Error("Arama başarısız: " + response.status);
-      }
+      if (!response.ok) throw new Error("Arama başarısız: " + response.status);
 
       const data = await response.json();
       setResults(Array.isArray(data) ? data : []);
     } catch (err) {
       console.error(err);
       setError("Arama sırasında bir hata oluştu.");
+      setResults([]);
     } finally {
       setLoading(false);
     }
@@ -90,132 +103,179 @@ export default function SearchPage() {
   };
 
   return (
-    <div
-      style={{
-        minHeight: "100vh",
-        background: "#020617",
-        color: "#e5e7eb",
-        padding: "32px",
-        paddingBottom: 110, // ✅ alt menü içerik kapatmasın
-        fontFamily:
-          'system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif',
-      }}
-    >
-      <h1 style={{ fontSize: 24, marginBottom: 16 }}>
-        Music PostIt · Spotify Search
-      </h1>
-
-      <div style={{ marginBottom: 16 }}>
-        <input
-          value={query}
-          onChange={(e) => setQuery(e.target.value)}
-          onKeyDown={handleKeyDown}
-          placeholder="Şarkı veya sanatçı ara..."
-          style={{
-            padding: "8px 12px",
-            borderRadius: 8,
-            border: "1px solid #4b5563",
-            minWidth: 260,
-            marginRight: 8,
-            background: "#0f172a",
-            color: "#e5e7eb",
-          }}
-        />
-
-        <button
-          onClick={search}
-          style={{
-            padding: "8px 16px",
-            borderRadius: 8,
-            border: "none",
-            background: "#22c55e",
-            color: "#000",
-            fontWeight: 600,
-            cursor: "pointer",
-          }}
-        >
-          Ara
-        </button>
-      </div>
-
-      {loading && <div>Aranıyor...</div>}
-      {error && <div style={{ color: "#f97316" }}>{error}</div>}
-      {success && (
+    <div className="page" style={{ position: "relative" }}>
+      <div className="content" style={{ paddingBottom: 110 }}>
+        {/* HERO: sonuç yokken ortada, sonuç gelince yukarı */}
         <div
-          style={{
-            marginTop: 8,
-            padding: "8px 12px",
-            borderRadius: 8,
-            background: "#022c22",
-            color: "#bbf7d0",
-            fontSize: 13,
-          }}
+          className="searchHero"
+          style={
+            hasResults
+              ? { justifyContent: "flex-start", paddingTop: 48, minHeight: "auto" }
+              : {}
+          }
         >
-          {success}
-        </div>
-      )}
+          {username && (
+  <div
+    onClick={() => navigate("/profile")}
+    style={{
+      position: "absolute",
+      top: 20,
+      right: 24,
+      display: "flex",
+      alignItems: "center",
+      gap: 8,
+      padding: "6px 10px",
+      borderRadius: 999,
+      cursor: "pointer",
 
-      <ul style={{ listStyle: "none", padding: 0, marginTop: 16 }}>
-        {results.map((song) => (
-          <li
-            key={song.externalId}
-            style={{
-              padding: "12px 0",
-              borderBottom: "1px solid #1f2937",
-              display: "flex",
-              gap: 12,
-              alignItems: "center",
-              justifyContent: "space-between",
-            }}
-          >
-            <div style={{ display: "flex", gap: 12, alignItems: "center" }}>
-              {song.coverUrl && (
-                <img
-                  src={song.coverUrl}
-                  alt=""
-                  style={{
-                    width: 48,
-                    height: 48,
-                    borderRadius: 8,
-                    objectFit: "cover",
-                  }}
-                />
-              )}
+      background: "rgba(184,156,255,0.12)",
+      border: "1px solid rgba(184,156,255,0.35)",
+      color: "#b89cff",
+      fontSize: 13,
+      fontWeight: 800,
 
-              <div>
-                <div style={{ fontWeight: 600 }}>{song.title}</div>
-                <div style={{ fontSize: 13, color: "#9ca3af" }}>
-                  {song.artist} · {song.album}
-                </div>
-                {song.durationSec && (
-                  <div style={{ fontSize: 12, color: "#6b7280" }}>
-                    {Math.floor(song.durationSec / 60)}:
-                    {(song.durationSec % 60).toString().padStart(2, "0")}
-                  </div>
-                )}
-              </div>
-            </div>
+      transition: "all 0.2s ease",
+    }}
+    onMouseEnter={(e) => {
+      e.currentTarget.style.boxShadow =
+        "0 0 12px rgba(184,156,255,0.6)";
+    }}
+    onMouseLeave={(e) => {
+      e.currentTarget.style.boxShadow = "none";
+    }}
+  >
+    <img
+      src={avatarUrl}
+      alt="avatar"
+      style={{
+        width: 28,
+        height: 28,
+        borderRadius: "50%",
+        objectFit: "cover",
+      }}
+    />
+    <span>{username}</span>
+  </div>
+)}
 
-            <button
-              onClick={() => importSong(song)}
+
+          <h1 style={{ fontSize: hasResults ? 28 : 40, margin: 0 }}>
+            Music PostIt · Search
+          </h1>
+
+          <div className="searchRow">
+            <input
+              className="searchInput"
+              value={query}
+              onChange={(e) => setQuery(e.target.value)}
+              onKeyDown={handleKeyDown}
+              placeholder="Şarkı veya sanatçı ara..."
               style={{
-                padding: "6px 10px",
-                borderRadius: 8,
+                padding: "8px 12px",
+                borderRadius: 10,
                 border: "1px solid #4b5563",
                 background: "#0f172a",
                 color: "#e5e7eb",
-                fontSize: 12,
+              }}
+            />
+
+            <button
+              className="searchBtn"
+              onClick={search}
+              style={{
+                border: "none",
+                background: "#b89cff",
+                color: "#000",
+                fontWeight: 800,
                 cursor: "pointer",
               }}
             >
-              Bu şarkıyı ekle
+              Ara
             </button>
-          </li>
-        ))}
-      </ul>
+          </div>
 
-      {/* ✅ alt menü */}
-      <BottomNav />
+          {loading && <div>Aranıyor...</div>}
+          {error && <div style={{ color: "#f97316" }}>{error}</div>}
+          {success && (
+            <div
+              style={{
+                marginTop: 8,
+                padding: "8px 12px",
+                borderRadius: 8,
+                background: "#022c22",
+                color: "#bbf7d0",
+                fontSize: 13,
+              }}
+            >
+              {success}
+            </div>
+          )}
+        </div>
+
+        {/* ✅ SONUÇLAR HERO'NUN DIŞINDA */}
+        {results.length > 0 && (
+          <ul style={{ listStyle: "none", padding: 0, marginTop: 24 }}>
+            {results.map((song) => (
+              <li
+                key={song.externalId}
+                style={{
+                  padding: "12px 0",
+                  borderBottom: "1px solid #1f2937",
+                  display: "flex",
+                  gap: 12,
+                  alignItems: "center",
+                  justifyContent: "space-between",
+                }}
+              >
+                <div style={{ display: "flex", gap: 12, alignItems: "center" }}>
+                  {song.coverUrl && (
+                    <img
+                      src={song.coverUrl}
+                      alt=""
+                      style={{
+                        width: 48,
+                        height: 48,
+                        borderRadius: 8,
+                        objectFit: "cover",
+                      }}
+                    />
+                  )}
+
+                  <div>
+                    <div style={{ fontWeight: 700 }}>{song.title}</div>
+                    <div style={{ fontSize: 13, color: "#9ca3af" }}>
+                      {song.artist} · {song.album}
+                    </div>
+                    {song.durationSec && (
+                      <div style={{ fontSize: 12, color: "#6b7280" }}>
+                        {Math.floor(song.durationSec / 60)}:
+                        {(song.durationSec % 60).toString().padStart(2, "0")}
+                      </div>
+                    )}
+                  </div>
+                </div>
+
+                <button
+                  onClick={() => importSong(song)}
+                  style={{
+                    padding: "6px 10px",
+                    borderRadius: 10,
+                    border: "1px solid #4b5563",
+                    background: "#0f172a",
+                    color: "#e5e7eb",
+                    fontSize: 12,
+                    cursor: "pointer",
+                  }}
+                >
+                  Bu şarkıyı ekle
+                </button>
+              </li>
+            ))}
+          </ul>
+        )}
+
+        <BottomNav />
+      </div>
     </div>
   );
 }

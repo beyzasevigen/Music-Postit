@@ -1,42 +1,61 @@
+/* ==== GLOBAL RESET ==== */
+* {
+  box-sizing: border-box;
+}
+
+html, body, #root {
+  width: 100%;
+  height: 100%;
+  margin: 0;
+  padding: 0;
+}
+
+/* ==== SURPRISE THEME 😈 ==== */
+/* Midnight Plum – koyu, premium, müzik app vibe */
+
+body {
+  background: radial-gradient(
+    circle at top left,
+    #1b1029 0%,
+    #0b0614 45%,
+    #05030a 100%
+  );
+  color: #eae7f2;
+  font-family: Inter, system-ui, Avenir, Helvetica, Arial, sans-serif;
+  overflow-x: hidden;
+}
+
+/* ==== ROOT ==== */
 #root {
-  max-width: 1280px;
-  margin: 0 auto;
-  padding: 2rem;
-  text-align: center;
+  width: 100%;
+  min-height: 100vh;
 }
 
-.logo {
-  height: 6em;
-  padding: 1.5em;
-  will-change: filter;
-  transition: filter 300ms;
-}
-.logo:hover {
-  filter: drop-shadow(0 0 2em #646cffaa);
-}
-.logo.react:hover {
-  filter: drop-shadow(0 0 2em #61dafbaa);
+/* ==== PAGE WRAPPER ==== */
+.page {
+  width: 100%;
+  min-height: 100vh;
+  padding-bottom: 96px; /* bottom nav için boşluk */
 }
 
-@keyframes logo-spin {
-  from {
-    transform: rotate(0deg);
-  }
-  to {
-    transform: rotate(360deg);
-  }
-}
-
-@media (prefers-reduced-motion: no-preference) {
-  a:nth-of-type(2) .logo {
-    animation: logo-spin infinite 20s linear;
-  }
-}
-
+/* ==== CARDS ==== */
 .card {
-  padding: 2em;
+  background: rgba(255, 255, 255, 0.04);
+  border-radius: 16px;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  backdrop-filter: blur(12px);
 }
 
-.read-the-docs {
-  color: #888;
+/* ==== BUTTONS ==== */
+button {
+  font-family: inherit;
+}
+
+/* ==== LINKS ==== */
+a {
+  color: #9f7aea;
+  text-decoration: none;
+}
+a:hover {
+  text-decoration: underline;
 }

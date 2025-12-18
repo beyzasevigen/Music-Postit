@@ -42,6 +42,8 @@ export default function LoginPage() {
   };
 
   return (
+    <div className="page">
+      {
     <div style={styles.page}>
       <div style={styles.card}>
         <div style={styles.title}>Login</div>
@@ -86,6 +88,8 @@ export default function LoginPage() {
         </div>
       </div>
     </div>
+}
+</div>
   );
 }
 
