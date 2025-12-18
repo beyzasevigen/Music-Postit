@@ -131,7 +131,7 @@ export default function SongPage() {
         }),
       });
 
-      if (!res.ok) throw new Error("Not eklenemedi");
+      if (!res.ok) throw new Error("post-it could not saved");
 
       const created = await res.json();
       const normalized = {
@@ -149,7 +149,7 @@ export default function SongPage() {
       setIsPublic(true);
     } catch (err) {
       console.error(err);
-      alert("Not eklerken bir hata oluştu.");
+      alert("Error while adding post-it");
     }
   };
 
@@ -198,7 +198,7 @@ export default function SongPage() {
     return (
       <div className="page">
         <div className="content" style={{ paddingBottom: 110 }}>
-          Yükleniyor...
+          Loading...
           <BottomNav />
         </div>
       </div>
@@ -211,7 +211,7 @@ export default function SongPage() {
         <div className="content" style={{ paddingBottom: 110 }}>
           <p>{error || "Bir hata oluştu."}</p>
           <Link to="/" style={{ color: "#b89cff" }}>
-            ← Aramaya dön
+            ← Go Back to the Search
           </Link>
           <BottomNav />
         </div>
@@ -223,7 +223,7 @@ export default function SongPage() {
     <div className="page">
       <div className="content" style={{ paddingBottom: 110 }}>
         <Link to="/" style={{ color: "#b89cff", fontSize: 14 }}>
-          ← Aramaya dön
+          ← Go Back to the Search
         </Link>
 
         {/* HERO */}
@@ -263,7 +263,7 @@ export default function SongPage() {
 
             {song.durationSec && (
               <div style={{ color: "#9ca3af", fontSize: 13, marginTop: 10 }}>
-                Süre: {Math.floor(song.durationSec / 60)}:
+                Time: {Math.floor(song.durationSec / 60)}:
                 {(song.durationSec % 60).toString().padStart(2, "0")}
               </div>
             )}
@@ -282,12 +282,12 @@ export default function SongPage() {
             backdropFilter: "blur(12px)",
           }}
         >
-          <h2 style={{ fontSize: 18, margin: 0, marginBottom: 14 }}>Yeni not ekle</h2>
+          <h2 style={{ fontSize: 18, margin: 0, marginBottom: 14 }}>Add a New Post-It</h2>
 
           <div style={{ display: "flex", gap: 12, marginBottom: 12, alignItems: "stretch" }}>
             <div style={{ width: 140 }}>
               <label style={{ fontSize: 12, color: "#c7c2d6" }}>
-                Zaman (saniye)
+                Time (as second)
               </label>
               <input
                 type="number"
@@ -308,7 +308,7 @@ export default function SongPage() {
             </div>
 
             <div style={{ flex: 1, minWidth: 260 }}>
-              <label style={{ fontSize: 12, color: "#c7c2d6" }}>Not</label>
+              <label style={{ fontSize: 12, color: "#c7c2d6" }}>Post-It</label>
               <textarea
                 value={noteText}
                 onChange={(e) => setNoteText(e.target.value)}
@@ -366,7 +366,7 @@ export default function SongPage() {
             </button>
 
             <span style={{ fontSize: 12, color: "#9ca3af" }}>
-              {isPublic ? "Herkese açık" : "Sadece ben"}
+              {isPublic ? "Open to everyone" : "Just me"}
             </span>
           </div>
 
@@ -383,19 +383,19 @@ export default function SongPage() {
               fontSize: 14,
             }}
           >
-            Notu ekle
+            Leave the Post-It
           </button>
         </div>
 
         {/* Not listesi */}
         <div style={{ marginTop: 24 }}>
           <h2 style={{ fontSize: 18, marginBottom: 12 }}>
-            Şarkıdaki notlar {onlyMine ? "(Sadece benim)" : ""}
+            Post-Its in this song {onlyMine ? "(Just mine)" : ""}
           </h2>
 
           {filteredNotes.length === 0 && (
             <div style={{ color: "#9ca3af", fontSize: 14 }}>
-              {onlyMine ? "Bu şarkıda sana ait not yok." : "Bu şarkı için henüz not yok."}
+              {onlyMine ? "There is no personal post-it in that song" : "Leave the first post-it for this song."}
             </div>
           )}
 

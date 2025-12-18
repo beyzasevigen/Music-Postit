@@ -6,17 +6,28 @@ const API_BASE = "http://localhost:8080";
 
 export default function LoginPage() {
   const navigate = useNavigate();
+
   const [username, setUsername] = useState("beyza");
   const [password, setPassword] = useState("secret");
   const [loading, setLoading] = useState(false);
   const [msg, setMsg] = useState("");
+
+  const UI = {
+    cardBg: "rgba(184,156,255,0.08)",
+    cardBorder: "rgba(184,156,255,0.18)",
+    inputBg: "rgba(15,23,42,0.55)",
+    inputBorder: "rgba(184,156,255,0.22)",
+    accent: "#b89cff",
+    accentText: "#120a1d",
+    muted: "#9ca3af",
+  };
 
   const testLogin = async () => {
     setLoading(true);
     setMsg("");
 
     try {
-      // ✅ Backend’te auth gerektiren kolay bir endpoint’i test ediyoruz
+      // We test an authenticated endpoint to verify credentials
       const res = await fetch(`${API_BASE}/api/songs/1`, {
         headers: {
           Authorization: "Basic " + btoa(`${username}:${password}`),
@@ -24,18 +35,40 @@ export default function LoginPage() {
       });
 
       if (!res.ok) {
-        setMsg("Giriş başarısız. Kullanıcı adı/şifre yanlış olabilir.");
+        setMsg("Login failed. Your username/password might be incorrect.");
         return;
       }
 
-      // ✅ başarılıysa kaydet
       setAuth(username, password);
-      setMsg("Giriş başarılı ✅");
+      try {
+  const meRes = await fetch(`${API_BASE}/api/users/me`, {
+    headers: { Authorization: "Basic " + btoa(`${username}:${password}`) },
+  });
 
-      setTimeout(() => navigate("/"), 500);
+  if (meRes.ok) {
+    const me = await meRes.json();
+    localStorage.setItem("auth_userId", String(me.id || ""));
+    localStorage.setItem("auth_username", me.username || username || "");
+    localStorage.setItem("auth_avatar", me.imageUrl || "");
+    localStorage.setItem("auth_email", me.email || "");
+  } else {
+    // fallback
+    localStorage.setItem("auth_username", username || "");
+    localStorage.setItem("auth_avatar", "");
+  }
+} catch {
+  localStorage.setItem("auth_username", username || "");
+  localStorage.setItem("auth_avatar", "");
+}
+
+      // (Optional) keep these for UI
+      localStorage.setItem("auth_username", username || "");
+
+      setMsg("Login successful ✅");
+      setTimeout(() => navigate("/"), 450);
     } catch (e) {
       console.error(e);
-      setMsg("Sunucuya bağlanırken hata oluştu.");
+      setMsg("Could not reach the server.");
     } finally {
       setLoading(false);
     }
@@ -43,112 +76,133 @@ export default function LoginPage() {
 
   return (
     <div className="page">
-      {
-    <div style={styles.page}>
-      <div style={styles.card}>
-        <div style={styles.title}>Login</div>
-        <div style={styles.subtitle}>
-          Basic Auth kullanıyoruz. Login butonu bilgileri kaydeder ve isteklerde otomatik kullanılır.
-        </div>
-
-        {msg && <div style={styles.msg}>{msg}</div>}
-
-        <div style={styles.box}>
-          <div style={styles.row}>
-            <label style={styles.label}>Username (veya email)</label>
-            <input style={styles.input} value={username} onChange={(e) => setUsername(e.target.value)} />
+      <div className="content" style={styles.content}>
+        <div style={{ ...styles.card, background: UI.cardBg, border: `1px solid ${UI.cardBorder}` }}>
+          <div style={styles.title}>Login</div>
+          <div style={{ ...styles.subtitle, color: UI.muted }}>
+            We use Basic Auth. Clicking Login stores your credentials and uses them automatically in requests.
           </div>
 
-          <div style={styles.row}>
-            <label style={styles.label}>Password</label>
-            <input
-              style={styles.input}
-              type="password"
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-            />
+          {msg && (
+            <div
+              style={{
+                ...styles.msg,
+                background: "rgba(184,156,255,0.12)",
+                border: "1px solid rgba(184,156,255,0.25)",
+                color: "#eae7f2",
+              }}
+            >
+              {msg}
+            </div>
+          )}
+
+          <div
+            style={{
+              ...styles.box,
+              background: UI.inputBg,
+              border: `1px solid ${UI.inputBorder}`,
+            }}
+          >
+            <div style={styles.row}>
+              <label style={{ ...styles.label, color: "#c7c2d6" }}>
+                Username (or email)
+              </label>
+              <input
+                style={{
+                  ...styles.input,
+                  background: "rgba(15,23,42,0.65)",
+                  border: `1px solid ${UI.inputBorder}`,
+                  color: "#eae7f2",
+                }}
+                value={username}
+                onChange={(e) => setUsername(e.target.value)}
+                autoComplete="username"
+              />
+            </div>
+
+            <div style={styles.row}>
+              <label style={{ ...styles.label, color: "#c7c2d6" }}>Password</label>
+              <input
+                style={{
+                  ...styles.input,
+                  background: "rgba(15,23,42,0.65)",
+                  border: `1px solid ${UI.inputBorder}`,
+                  color: "#eae7f2",
+                }}
+                type="password"
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                autoComplete="current-password"
+              />
+            </div>
+
+            <button
+              style={{
+                ...styles.button,
+                background: UI.accent,
+                color: UI.accentText,
+              }}
+              onClick={testLogin}
+              disabled={loading}
+            >
+              {loading ? "Checking..." : "Login"}
+            </button>
           </div>
 
-          <button style={styles.button} onClick={testLogin} disabled={loading}>
-            {loading ? "Kontrol ediliyor..." : "Login"}
-          </button>
-        </div>
-
-        <div style={styles.footer}>
-          Hesabın yok mu?{" "}
-          <Link to="/register" style={styles.link}>
-            Register
-          </Link>
-        </div>
-
-        <div style={{ marginTop: 10 }}>
-          <Link to="/" style={styles.back}>
-            ← Ana sayfaya dön
-          </Link>
+          <div style={{ ...styles.footer, color: UI.muted }}>
+            Don&apos;t have an account?{" "}
+            <Link to="/register" style={{ ...styles.link, color: UI.accent }}>
+              Register
+            </Link>
+          </div>
         </div>
       </div>
     </div>
-}
-</div>
   );
 }
 
 const styles = {
-  page: {
-    minHeight: "100vh",
+  content: {
+    paddingBottom: 40,
     display: "grid",
     placeItems: "center",
-    background: "#020617",
-    color: "#e5e7eb",
-    fontFamily: 'system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif',
-    padding: 20,
+    minHeight: "100vh",
   },
   card: {
     width: "min(560px, 92vw)",
-    background: "#0b1222",
-    border: "1px solid #1f2937",
-    borderRadius: 16,
+    borderRadius: 18,
     padding: 22,
-    boxShadow: "0 18px 45px rgba(15,23,42,0.9)",
+    backdropFilter: "blur(12px)",
+    boxShadow: "0 18px 45px rgba(0,0,0,0.45)",
   },
-  title: { fontSize: 26, fontWeight: 800 },
-  subtitle: { color: "#9ca3af", marginTop: 6, marginBottom: 14 },
+  title: { fontSize: 28, fontWeight: 900 },
+  subtitle: { marginTop: 8, marginBottom: 14, fontSize: 13, lineHeight: 1.5 },
   msg: {
     padding: "10px 12px",
-    borderRadius: 10,
+    borderRadius: 12,
     marginBottom: 12,
     fontSize: 14,
-    background: "rgba(96,165,250,0.12)",
-    border: "1px solid rgba(96,165,250,0.25)",
   },
   box: {
-    background: "#0f172a",
-    border: "1px solid #334155",
-    borderRadius: 14,
+    borderRadius: 16,
     padding: 14,
   },
   row: { display: "grid", gap: 6, marginBottom: 10 },
-  label: { fontSize: 13, color: "#cbd5e1" },
+  label: { fontSize: 13, fontWeight: 800 },
   input: {
     padding: "10px 12px",
-    borderRadius: 10,
-    border: "1px solid #334155",
-    background: "#0b1222",
-    color: "#e5e7eb",
+    borderRadius: 12,
     outline: "none",
   },
   button: {
-    marginTop: 6,
+    marginTop: 8,
     padding: "10px 14px",
-    borderRadius: 10,
+    borderRadius: 999,
     border: "none",
-    background: "#22c55e",
-    color: "#000",
-    fontWeight: 800,
+    fontWeight: 900,
     cursor: "pointer",
     width: "100%",
   },
-  footer: { marginTop: 14, color: "#9ca3af", fontSize: 14 },
-  link: { color: "#60a5fa", textDecoration: "none", fontWeight: 700 },
-  back: { color: "#93c5fd", textDecoration: "none", fontSize: 14 },
+  footer: { marginTop: 14, fontSize: 14 },
+  link: { textDecoration: "none", fontWeight: 900 },
 };

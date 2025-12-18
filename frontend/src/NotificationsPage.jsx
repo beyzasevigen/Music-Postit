@@ -42,7 +42,7 @@ export default function NotificationsPage() {
 
         if (!res.ok) {
           const t = await res.text().catch(() => "");
-          throw new Error(t || `Bildirimler alınamadı (${res.status})`);
+          throw new Error(t || `Notifications cannot be taken (${res.status})`);
         }
 
         const data = await res.json();
@@ -66,10 +66,10 @@ export default function NotificationsPage() {
         {/* Header */}
         <div style={{ marginBottom: 14 }}>
           <div style={{ fontSize: 34, fontWeight: 900, lineHeight: 1.15 }}>
-            Bildirimler
+            Notifications
           </div>
           <div style={{ marginTop: 6, color: UI.muted, fontSize: 13 }}>
-            Yorumlarına gelen beğeniler
+            Likes for your post-its ✨
           </div>
         </div>
 
@@ -83,12 +83,12 @@ export default function NotificationsPage() {
             backdropFilter: "blur(12px)",
           }}
         >
-          {loading && <div style={{ color: UI.muted, fontSize: 14 }}>Yükleniyor...</div>}
+          {loading && <div style={{ color: UI.muted, fontSize: 14 }}>Loading...</div>}
           {error && <div style={{ color: "#f97316", fontSize: 14 }}>{error}</div>}
 
           {!loading && !error && items.length === 0 && (
             <div style={{ color: UI.muted, fontSize: 14 }}>
-              Henüz beğeni bildirimin yok.
+              There is no notification for now.
             </div>
           )}
 
@@ -98,7 +98,7 @@ export default function NotificationsPage() {
               const who = n.likedByUsername || "Biri";
               const title = n.songTitle || "bir şarkı";
 
-              const message = `${who}, "${title}" şarkısındaki yorumunu beğendi`;
+              const message = `${who}, liked your post-it in "${title}"!`;
 
               return (
                 <li
@@ -138,7 +138,7 @@ export default function NotificationsPage() {
                           whiteSpace: "nowrap",
                         }}
                       >
-                        Aç →
+                        Check →
                       </Link>
                     ) : (
                       <span style={{ color: UI.muted }}>—</span>

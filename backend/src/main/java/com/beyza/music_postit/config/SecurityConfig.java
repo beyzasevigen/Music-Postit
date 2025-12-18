@@ -29,13 +29,25 @@ public class SecurityConfig {
                 .csrf(csrf -> csrf.disable()) // şimdilik kolaylık için
                 .cors(Customizer.withDefaults())
                 .authorizeHttpRequests(auth -> auth
+                        // thymeleaf sayfalar + static dosyalar açık
+                        .requestMatchers(
+                                "/help",
+                                "/",
+                                "/login",
+                                "/default-ui.css",
+                                "/css/**", "/js/**", "/images/**", "/favicon.ico"
+                        ).permitAll()
+
                         // register endpoint'i açık olacak
                         .requestMatchers("/api/auth/register").permitAll()
-                        // Hata sayfası vs.
+
+                        // hata sayfası
                         .requestMatchers("/error").permitAll()
+
                         // diğer her şey için login şart
                         .anyRequest().authenticated()
                 )
+
                 .httpBasic(Customizer.withDefaults())   // Basic Auth (Postman için)
                 // şimdilik Spring'in hazır login formunu kullanıyoruz
                 .formLogin(Customizer.withDefaults())

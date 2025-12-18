@@ -188,6 +188,18 @@ export default function ProfilePage() {
     }
   };
 
+  const logout = () => {
+  // auth bilgilerini temizle
+  localStorage.removeItem("auth_basic");
+  localStorage.removeItem("auth_username");
+  localStorage.removeItem("auth_userId");
+  localStorage.removeItem("auth_email");
+  localStorage.removeItem("auth_avatar");
+
+  navigate("/login");
+};
+
+
   useEffect(() => {
     if (!auth) return;
     loadPostits(postitTab);
@@ -297,15 +309,15 @@ export default function ProfilePage() {
           }}
           style={{ ...styles.pill, marginTop: 12 }}
         >
-          Profili Düzenle
+          Update Your Profile
         </button>
 
         {editOpen && (
           <div style={{ ...styles.card, marginTop: 16 }}>
-            <div style={styles.sectionTitle}>Profili Düzenle</div>
+            <div style={styles.sectionTitle}>Update Your Profile</div>
 
             <div style={{ marginBottom: 12 }}>
-              <label style={{ fontSize: 12, color: UI.muted }}>Kullanıcı adı</label>
+              <label style={{ fontSize: 12, color: UI.muted }}>Username</label>
               <input
                 value={editUsername}
                 onChange={(e) => setEditUsername(e.target.value)}
@@ -314,7 +326,7 @@ export default function ProfilePage() {
             </div>
 
             <div style={{ marginBottom: 14 }}>
-              <label style={{ fontSize: 12, color: UI.muted }}>Profil foto URL</label>
+              <label style={{ fontSize: 12, color: UI.muted }}>Profile photo URL</label>
               <input
                 value={editImageUrl}
                 onChange={(e) => setEditImageUrl(e.target.value)}
@@ -333,14 +345,14 @@ export default function ProfilePage() {
                   border: "none",
                 }}
               >
-                Kaydet
+                Save
               </button>
 
               <button
                 onClick={() => setEditOpen(false)}
                 style={{ ...styles.pill, color: UI.muted }}
               >
-                Vazgeç
+                Cancel
               </button>
             </div>
           </div>
@@ -348,7 +360,7 @@ export default function ProfilePage() {
 
         {/* Postitlerim */}
         <div style={{ ...styles.card, marginTop: 18 }}>
-          <div style={styles.sectionTitle}>Postitlerim</div>
+          <div style={styles.sectionTitle}>My Post-Its💜</div>
 
           <div style={styles.tabRow}>
             <button
@@ -371,11 +383,11 @@ export default function ProfilePage() {
             </button>
           </div>
 
-          {postitLoading && <div style={styles.muted}>Yükleniyor...</div>}
+          {postitLoading && <div style={styles.muted}>Loading...</div>}
           {postitError && <div style={styles.error}>{postitError}</div>}
 
           {!postitLoading && !postitError && postitSongs.length === 0 && (
-            <div style={styles.muted}>Bu sekmede henüz postitin yok.</div>
+            <div style={styles.muted}>There is no post-it for now.</div>
           )}
 
           <ul style={styles.list}>
@@ -407,13 +419,13 @@ export default function ProfilePage() {
 
         {/* Son dinlenen */}
         <div style={{ ...styles.card, marginTop: 18 }}>
-          <div style={styles.sectionTitle}>Son dinlenen şarkılar</div>
+          <div style={styles.sectionTitle}>Recently Lİstened Songs</div>
 
-          {loading && <div style={styles.muted}>Yükleniyor...</div>}
+          {loading && <div style={styles.muted}>Loading...</div>}
           {error && <div style={styles.error}>{error}</div>}
 
           {!loading && !error && history.length === 0 && (
-            <div style={styles.muted}>Henüz dinleme geçmişin yok.</div>
+            <div style={styles.muted}>There is no recent music history for now.</div>
           )}
 
           <ul style={styles.list}>
@@ -447,6 +459,33 @@ export default function ProfilePage() {
             })}
           </ul>
         </div>
+        <div style={{ marginTop: 28 }}>
+  <button
+    onClick={logout}
+    style={{
+      width: "100%",
+      padding: "12px 16px",
+      borderRadius: 16,
+      border: "1px solid rgba(239,68,68,0.55)",
+      background: "rgba(239,68,68,0.85)", // 🔴 kırmızı kutu
+      color: "#ffffff",                  // ⚪ beyaz yazı
+      fontWeight: 900,
+      fontSize: 14,
+      cursor: "pointer",
+      transition: "all 0.2s ease",
+    }}
+    onMouseEnter={(e) => {
+      e.currentTarget.style.boxShadow =
+        "0 0 16px rgba(239,68,68,0.55)";
+    }}
+    onMouseLeave={(e) => {
+      e.currentTarget.style.boxShadow = "none";
+    }}
+  >
+    Log out
+  </button>
+</div>
+
 
         <BottomNav />
       </div>

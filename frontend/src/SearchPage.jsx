@@ -116,47 +116,92 @@ export default function SearchPage() {
         >
           {username && (
   <div
-    onClick={() => navigate("/profile")}
     style={{
       position: "absolute",
       top: 20,
       right: 24,
       display: "flex",
       alignItems: "center",
-      gap: 8,
-      padding: "6px 10px",
-      borderRadius: 999,
-      cursor: "pointer",
-
-      background: "rgba(184,156,255,0.12)",
-      border: "1px solid rgba(184,156,255,0.35)",
-      color: "#b89cff",
-      fontSize: 13,
-      fontWeight: 800,
-
-      transition: "all 0.2s ease",
-    }}
-    onMouseEnter={(e) => {
-      e.currentTarget.style.boxShadow =
-        "0 0 12px rgba(184,156,255,0.6)";
-    }}
-    onMouseLeave={(e) => {
-      e.currentTarget.style.boxShadow = "none";
+      gap: 10,
+      zIndex: 10,
     }}
   >
-    <img
-      src={avatarUrl}
-      alt="avatar"
+    {/* ❓ Yardım butonu (Thymeleaf) */}
+    <a
+      href="http://localhost:8080/help"
+      target="_blank"
+      rel="noreferrer"
+      title="Yardım"
       style={{
-        width: 28,
-        height: 28,
+        width: 32,
+        height: 32,
         borderRadius: "50%",
-        objectFit: "cover",
+        display: "flex",
+        alignItems: "center",
+        justifyContent: "center",
+
+        background: "rgba(184,156,255,0.12)",
+        border: "1px solid rgba(184,156,255,0.35)",
+        color: "#b89cff",
+        textDecoration: "none",
+        fontWeight: 900,
+        fontSize: 16,
+        cursor: "pointer",
+        transition: "all 0.2s ease",
       }}
-    />
-    <span>{username}</span>
+      onMouseEnter={(e) => {
+        e.currentTarget.style.boxShadow =
+          "0 0 10px rgba(184,156,255,0.5)";
+      }}
+      onMouseLeave={(e) => {
+        e.currentTarget.style.boxShadow = "none";
+      }}
+    >
+      ?
+    </a>
+
+    {/* 👤 Profil alanı */}
+    <div
+      onClick={() => navigate("/profile")}
+      style={{
+        display: "flex",
+        alignItems: "center",
+        gap: 8,
+        padding: "6px 10px",
+        borderRadius: 999,
+        cursor: "pointer",
+
+        background: "rgba(184,156,255,0.12)",
+        border: "1px solid rgba(184,156,255,0.35)",
+        color: "#b89cff",
+        fontSize: 13,
+        fontWeight: 800,
+        transition: "all 0.2s ease",
+      }}
+      onMouseEnter={(e) => {
+        e.currentTarget.style.boxShadow =
+          "0 0 12px rgba(184,156,255,0.6)";
+      }}
+      onMouseLeave={(e) => {
+        e.currentTarget.style.boxShadow = "none";
+      }}
+    >
+      <img
+        src={avatarUrl}
+        alt="avatar"
+        style={{
+          width: 28,
+          height: 28,
+          borderRadius: "50%",
+          objectFit: "cover",
+        }}
+      />
+      <span>{username}</span>
+    </div>
   </div>
 )}
+
+
 
 
           <h1 style={{ fontSize: hasResults ? 28 : 40, margin: 0 }}>
@@ -169,7 +214,7 @@ export default function SearchPage() {
               value={query}
               onChange={(e) => setQuery(e.target.value)}
               onKeyDown={handleKeyDown}
-              placeholder="Şarkı veya sanatçı ara..."
+              placeholder="Search for a song or artist..."
               style={{
                 padding: "8px 12px",
                 borderRadius: 10,
@@ -190,7 +235,7 @@ export default function SearchPage() {
                 cursor: "pointer",
               }}
             >
-              Ara
+              Search
             </button>
           </div>
 

@@ -17,19 +17,19 @@ export default function BottomNav() {
     <div style={styles.wrap}>
       <Link to="/" style={itemStyle("/")}>
         <div style={styles.icon}>🔎</div>
-        <div style={styles.text}>Ara</div>
+        <div style={styles.text}>Search</div>
         {isActive("/") && <div style={styles.dot} />}
       </Link>
 
       <Link to="/notifications" style={itemStyle("/notifications")}>
         <div style={styles.icon}>💜</div>
-        <div style={styles.text}>Bildirim</div>
+        <div style={styles.text}>Notification</div>
         {isActive("/notifications") && <div style={styles.dot} />}
       </Link>
 
       <Link to="/profile" style={itemStyle("/profile")}>
         <div style={styles.icon}>👤</div>
-        <div style={styles.text}>Profil</div>
+        <div style={styles.text}>Profile</div>
         {isActive("/profile") && <div style={styles.dot} />}
       </Link>
     </div>
