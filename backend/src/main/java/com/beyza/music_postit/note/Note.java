@@ -32,6 +32,12 @@ public class Note {
     @Column(nullable = false, length = 500)
     private String text;
 
+    @Column(name = "is_public", nullable = false)
+    private boolean isPublic = true;
+
+    public boolean isPublic() { return isPublic; }
+    public void setPublic(boolean aPublic) { isPublic = aPublic; }
+
     private LocalDateTime createdAt = LocalDateTime.now();
 
     public Note() {}

@@ -1,8 +1,8 @@
 package com.beyza.music_postit.note;
 
+import com.beyza.music_postit.like.LikeRepository;
 import com.beyza.music_postit.song.Song;
 import com.beyza.music_postit.song.SongRepository;
-import com.beyza.music_postit.like.LikeRepository;
 import com.beyza.music_postit.user.User;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
@@ -51,12 +51,15 @@ public class NoteController {
         note.setTimestampSec(request.getTimestampSec());
         note.setText(request.getText());
 
-        Note saved = noteRepository.save(note);
+        // ✅ Public/Private (null gelirse default: true)
+        note.setPublic(request.getIsPublic() == null || request.getIsPublic());
 
+        Note saved = noteRepository.save(note);
         return ResponseEntity.ok(toResponse(saved, currentUser));
     }
 
     // 2) Bir şarkıya ait tüm notları getir
+    // 🔒 Private notlar sadece sahibine görünür
     @GetMapping("/songs/{songId}/notes")
     public ResponseEntity<?> getNotesForSong(@PathVariable Long songId,
                                              @AuthenticationPrincipal User currentUser) {
@@ -69,6 +72,15 @@ public class NoteController {
         List<Note> notes = noteRepository.findBySongOrderByTimestampSecAsc(song);
 
         List<NoteResponse> responses = notes.stream()
+                .filter(note -> {
+                    // Public olanlar herkese açık
+                    if (note.isPublic()) return true;
+
+                    // Private ise sadece sahibi görebilsin
+                    return currentUser != null
+                            && note.getUser() != null
+                            && note.getUser().getId().equals(currentUser.getId());
+                })
                 .map(note -> toResponse(note, currentUser))
                 .toList();
 
@@ -120,6 +132,11 @@ public class NoteController {
             note.setTimestampSec(request.getTimestampSec());
         }
 
+        // ✅ isPublic güncellemek istersen (null ise dokunma)
+        if (request.getIsPublic() != null) {
+            note.setPublic(request.getIsPublic());
+        }
+
         Note saved = noteRepository.save(note);
         return ResponseEntity.ok(toResponse(saved, currentUser));
     }
@@ -146,7 +163,7 @@ public class NoteController {
         return ResponseEntity.ok("Note deleted");
     }
 
-    // ✅ liked + likesCount hesaplayan mapper
+    // ✅ liked + likesCount + isPublic hesaplayan mapper
     private NoteResponse toResponse(Note note, User currentUser) {
         Long noteId = note.getId();
         long count = likeRepository.countByNote_Id(noteId);
@@ -165,7 +182,8 @@ public class NoteController {
                 note.getText(),
                 note.getCreatedAt(),
                 liked,
-                count
+                count,
+                note.isPublic()
         );
     }
 }

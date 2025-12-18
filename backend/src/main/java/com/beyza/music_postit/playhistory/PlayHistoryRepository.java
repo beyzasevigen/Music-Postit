@@ -10,5 +10,7 @@ public interface PlayHistoryRepository extends JpaRepository<PlayHistory, Long> 
 
     List<PlayHistory> findByUserOrderByPlayedAtDesc(User user);
 
+    List<PlayHistory> findByUserIdOrderByPlayedAtDesc(Long userId);
+
     List<PlayHistory> findByUserAndSongOrderByPlayedAtDesc(User user, Song song);
 }

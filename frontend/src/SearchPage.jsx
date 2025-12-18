@@ -1,6 +1,7 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { getAuthHeader } from "./auth";
+import BottomNav from "./BottomNav";
 
 export default function SearchPage() {
   const [query, setQuery] = useState("");
@@ -8,8 +9,14 @@ export default function SearchPage() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
   const [success, setSuccess] = useState("");
+
   const navigate = useNavigate();
   const auth = getAuthHeader();
+
+  // 🔐 auth yoksa login
+  useEffect(() => {
+    if (!auth) navigate("/login");
+  }, [auth, navigate]);
 
   // 🎵 Spotify'dan gelen şarkıyı backend'e kaydet
   const importSong = async (song) => {
@@ -69,7 +76,7 @@ export default function SearchPage() {
       }
 
       const data = await response.json();
-      setResults(data);
+      setResults(Array.isArray(data) ? data : []);
     } catch (err) {
       console.error(err);
       setError("Arama sırasında bir hata oluştu.");
@@ -79,9 +86,7 @@ export default function SearchPage() {
   };
 
   const handleKeyDown = (e) => {
-    if (e.key === "Enter") {
-      search();
-    }
+    if (e.key === "Enter") search();
   };
 
   return (
@@ -91,6 +96,7 @@ export default function SearchPage() {
         background: "#020617",
         color: "#e5e7eb",
         padding: "32px",
+        paddingBottom: 110, // ✅ alt menü içerik kapatmasın
         fontFamily:
           'system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif',
       }}
@@ -207,6 +213,9 @@ export default function SearchPage() {
           </li>
         ))}
       </ul>
+
+      {/* ✅ alt menü */}
+      <BottomNav />
     </div>
   );
 }

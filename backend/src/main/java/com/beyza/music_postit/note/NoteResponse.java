@@ -13,7 +13,7 @@ public class NoteResponse {
     private LocalDateTime createdAt;
     private boolean liked;
     private long likesCount;
-
+    private boolean isPublic;
 
     public NoteResponse() {
     }
@@ -21,7 +21,7 @@ public class NoteResponse {
     public NoteResponse(Long id, Long userId, String username,
                         Long songId, Integer timestampSec,
                         String text, LocalDateTime createdAt,
-                        boolean liked, long likesCount) {
+                        boolean liked, long likesCount, boolean isPublic) {
         this.id = id;
         this.userId = userId;
         this.username = username;
@@ -31,6 +31,7 @@ public class NoteResponse {
         this.createdAt = createdAt;
         this.liked = liked;
         this.likesCount = likesCount;
+        this.isPublic = isPublic;
     }
 
     public Long getId() {
@@ -73,6 +74,8 @@ public class NoteResponse {
         this.id = id;
     }
 
+    public boolean getIsPublic() { return isPublic; }
+
     public void setUserId(Long userId) {
         this.userId = userId;
     }
@@ -104,4 +107,6 @@ public class NoteResponse {
     public void setLikesCount(long likesCount) {
         this.likesCount = likesCount;
     }
+
+    public void setIsPublic(boolean isPublic) { this.isPublic = isPublic; }
 }

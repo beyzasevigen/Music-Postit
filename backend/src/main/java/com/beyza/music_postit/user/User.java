@@ -31,6 +31,8 @@ public class User implements UserDetails {
     @Column(nullable = false)
     private String role = "ROLE_USER";
 
+    @Column(name = "image_url")
+    private String imageUrl;
 
     private LocalDateTime createdAt = LocalDateTime.now();
 
@@ -84,6 +86,10 @@ public class User implements UserDetails {
     public void setCreatedAt(LocalDateTime createdAt) {
         this.createdAt = createdAt;
     }
+
+    public String getImageUrl() { return imageUrl; }
+    public void setImageUrl(String imageUrl) { this.imageUrl = imageUrl; }
+
 
     @Override
     public Collection<? extends GrantedAuthority> getAuthorities() {

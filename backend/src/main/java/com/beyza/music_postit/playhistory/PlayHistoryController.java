@@ -51,13 +51,11 @@ public class PlayHistoryController {
     // 2) Giriş yapmış kullanıcının dinleme geçmişi
     @GetMapping("/play-history/me/recent-songs")
     public ResponseEntity<?> getMyRecentSongs(@AuthenticationPrincipal User currentUser) {
-
-        if (currentUser == null) {
-            return ResponseEntity.status(401).body("Login olmalısın");
-        }
+        if (currentUser == null) return ResponseEntity.status(401).body("Login olmalısın");
+        if (currentUser.getId() == null) return ResponseEntity.status(401).body("User id bulunamadı");
 
         var historyList = playHistoryRepository
-                .findByUserOrderByPlayedAtDesc(currentUser);
+                .findByUserIdOrderByPlayedAtDesc(currentUser.getId());
 
         var songs = historyList.stream()
                 .map(PlayHistory::getSong)
@@ -73,6 +71,7 @@ public class PlayHistoryController {
 
         return ResponseEntity.ok(songs);
     }
+
 
 
     private PlayHistoryResponse toResponse(PlayHistory ph) {
