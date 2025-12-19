@@ -15,7 +15,7 @@ export default function SearchPage() {
   const navigate = useNavigate();
   const auth = getAuthHeader();
 
-  // 🔐 auth yoksa login
+  //  auth yoksa login
   useEffect(() => {
     if (!auth) navigate("/login");
   }, [auth, navigate]);
@@ -34,13 +34,13 @@ export default function SearchPage() {
 }, []);
 
 
-  // Sonuç var mı? (loading/error da varsa hero yukarı çıksın)
+  // Sonuç var mı (loading/error da varsa hero yukarı çıksın)
   const hasResults = useMemo(
     () => results.length > 0 || loading || !!error,
     [results.length, loading, error]
   );
 
-  // 🎵 Spotify'dan gelen şarkıyı backend'e kaydet
+  // Spotify'dan gelen şarkıyı backend'e kaydet
   const importSong = async (song) => {
     try {
       const response = await fetch("http://localhost:8080/api/songs", {
@@ -71,7 +71,7 @@ export default function SearchPage() {
     }
   };
 
-  // 🔍 Spotify araması
+  // Spotify araması
   const search = async () => {
     if (!query.trim()) return;
 
@@ -115,95 +115,91 @@ export default function SearchPage() {
           }
         >
           {username && (
-  <div
-    style={{
-      position: "absolute",
-      top: 20,
-      right: 24,
-      display: "flex",
-      alignItems: "center",
-      gap: 10,
-      zIndex: 10,
-    }}
-  >
-    {/* ❓ Yardım butonu (Thymeleaf) */}
-    <a
-      href="http://localhost:8080/help"
-      target="_blank"
-      rel="noreferrer"
-      title="Yardım"
-      style={{
-        width: 32,
-        height: 32,
-        borderRadius: "50%",
-        display: "flex",
-        alignItems: "center",
-        justifyContent: "center",
+            <div
+              style={{
+                position: "absolute",
+                top: 20,
+                right: 24,
+                display: "flex",
+                alignItems: "center",
+                gap: 10,
+                zIndex: 10,
+              }}
+            >
+              {/*  Yardım butonu (Thymeleaf) */}
+              <a
+                href="http://localhost:8080/help"
+                target="_blank"
+                rel="noreferrer"
+                title="Yardım"
+                style={{
+                  width: 32,
+                  height: 32,
+                  borderRadius: "50%",
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "center",
 
-        background: "rgba(184,156,255,0.12)",
-        border: "1px solid rgba(184,156,255,0.35)",
-        color: "#b89cff",
-        textDecoration: "none",
-        fontWeight: 900,
-        fontSize: 16,
-        cursor: "pointer",
-        transition: "all 0.2s ease",
-      }}
-      onMouseEnter={(e) => {
-        e.currentTarget.style.boxShadow =
-          "0 0 10px rgba(184,156,255,0.5)";
-      }}
-      onMouseLeave={(e) => {
-        e.currentTarget.style.boxShadow = "none";
-      }}
-    >
-      ?
-    </a>
+                  background: "rgba(184,156,255,0.12)",
+                  border: "1px solid rgba(184,156,255,0.35)",
+                  color: "#b89cff",
+                  textDecoration: "none",
+                  fontWeight: 900,
+                  fontSize: 16,
+                  cursor: "pointer",
+                  transition: "all 0.2s ease",
+                }}
+                onMouseEnter={(e) => {
+                  e.currentTarget.style.boxShadow =
+                    "0 0 10px rgba(184,156,255,0.5)";
+                }}
+                onMouseLeave={(e) => {
+                  e.currentTarget.style.boxShadow = "none";
+                }}
+              >
+                ?
+              </a>
 
-    {/* 👤 Profil alanı */}
-    <div
-      onClick={() => navigate("/profile")}
-      style={{
-        display: "flex",
-        alignItems: "center",
-        gap: 8,
-        padding: "6px 10px",
-        borderRadius: 999,
-        cursor: "pointer",
+              {/*  Profil alanı */}
+              <div
+                onClick={() => navigate("/profile")}
+                style={{
+                  display: "flex",
+                  alignItems: "center",
+                  gap: 8,
+                  padding: "6px 10px",
+                  borderRadius: 999,
+                  cursor: "pointer",
 
-        background: "rgba(184,156,255,0.12)",
-        border: "1px solid rgba(184,156,255,0.35)",
-        color: "#b89cff",
-        fontSize: 13,
-        fontWeight: 800,
-        transition: "all 0.2s ease",
-      }}
-      onMouseEnter={(e) => {
-        e.currentTarget.style.boxShadow =
-          "0 0 12px rgba(184,156,255,0.6)";
-      }}
-      onMouseLeave={(e) => {
-        e.currentTarget.style.boxShadow = "none";
-      }}
-    >
-      <img
-        src={avatarUrl}
-        alt="avatar"
-        style={{
-          width: 28,
-          height: 28,
-          borderRadius: "50%",
-          objectFit: "cover",
-        }}
-      />
-      <span>{username}</span>
-    </div>
-  </div>
-)}
-
-
-
-
+                  background: "rgba(184,156,255,0.12)",
+                  border: "1px solid rgba(184,156,255,0.35)",
+                  color: "#b89cff",
+                  fontSize: 13,
+                  fontWeight: 800,
+                  transition: "all 0.2s ease",
+                }}
+                onMouseEnter={(e) => {
+                  e.currentTarget.style.boxShadow =
+                    "0 0 12px rgba(184,156,255,0.6)";
+                }}
+                onMouseLeave={(e) => {
+                  e.currentTarget.style.boxShadow = "none";
+                }}
+              >
+                <img
+                  src={avatarUrl}
+                  alt="avatar"
+                  style={{
+                    width: 28,
+                    height: 28,
+                    borderRadius: "50%",
+                    objectFit: "cover",
+                  }}
+                />
+                <span>{username}</span>
+              </div>
+            </div>
+          )}
           <h1 style={{ fontSize: hasResults ? 28 : 40, margin: 0 }}>
             Music PostIt · Search
           </h1>
@@ -257,7 +253,7 @@ export default function SearchPage() {
           )}
         </div>
 
-        {/* ✅ SONUÇLAR HERO'NUN DIŞINDA */}
+        {/* aaaa*/}
         {results.length > 0 && (
           <ul style={{ listStyle: "none", padding: 0, marginTop: 24 }}>
             {results.map((song) => (

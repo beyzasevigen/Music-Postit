@@ -3,7 +3,7 @@ import SearchPage from "./SearchPage";
 import SongPage from "./SongPage";
 import LoginPage from "./LoginPage";
 import RegisterPage from "./RegisterPage";
-import ProfilePage from "./ProfilePage"; // 🔴 EKSİK OLAN BUYDU
+import ProfilePage from "./ProfilePage"; 
 import NotificationsPage from "./NotificationsPage";
 
 function App() {

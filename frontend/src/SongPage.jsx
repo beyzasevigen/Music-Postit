@@ -193,7 +193,7 @@ export default function SongPage() {
 };
 
 
-  // Loading/Error ekranlarını da yeni layouta uyduralım
+  // Loading/Error ekranlarını da yeni layouta uydurma
   if (loading) {
     return (
       <div className="page">

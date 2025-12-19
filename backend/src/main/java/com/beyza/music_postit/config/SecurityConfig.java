@@ -26,7 +26,7 @@ public class SecurityConfig {
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
 
         http
-                .csrf(csrf -> csrf.disable()) // şimdilik kolaylık için
+                .csrf(csrf -> csrf.disable())
                 .cors(Customizer.withDefaults())
                 .authorizeHttpRequests(auth -> auth
                         // thymeleaf sayfalar + static dosyalar açık
@@ -49,7 +49,6 @@ public class SecurityConfig {
                 )
 
                 .httpBasic(Customizer.withDefaults())   // Basic Auth (Postman için)
-                // şimdilik Spring'in hazır login formunu kullanıyoruz
                 .formLogin(Customizer.withDefaults())
                 .logout(Customizer.withDefaults());
 

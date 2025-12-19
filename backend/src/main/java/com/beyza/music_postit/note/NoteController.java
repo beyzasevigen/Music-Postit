@@ -51,7 +51,7 @@ public class NoteController {
         note.setTimestampSec(request.getTimestampSec());
         note.setText(request.getText());
 
-        // ✅ Public/Private (null gelirse default: true)
+        // Public/Private (null gelirse default: true)
         note.setPublic(request.getIsPublic() == null || request.getIsPublic());
 
         Note saved = noteRepository.save(note);
@@ -59,7 +59,7 @@ public class NoteController {
     }
 
     // 2) Bir şarkıya ait tüm notları getir
-    // 🔒 Private notlar sadece sahibine görünür
+    // Private notlar sadece sahibine görünür
     @GetMapping("/songs/{songId}/notes")
     public ResponseEntity<?> getNotesForSong(@PathVariable Long songId,
                                              @AuthenticationPrincipal User currentUser) {
@@ -132,7 +132,7 @@ public class NoteController {
             note.setTimestampSec(request.getTimestampSec());
         }
 
-        // ✅ isPublic güncellemek istersen (null ise dokunma)
+        // isPublic güncelleme
         if (request.getIsPublic() != null) {
             note.setPublic(request.getIsPublic());
         }
@@ -163,7 +163,7 @@ public class NoteController {
         return ResponseEntity.ok("Note deleted");
     }
 
-    // ✅ liked + likesCount + isPublic hesaplayan mapper
+    // liked + likesCount + isPublic hesaplayan mapper
     private NoteResponse toResponse(Note note, User currentUser) {
         Long noteId = note.getId();
         long count = likeRepository.countByNote_Id(noteId);

@@ -3,7 +3,7 @@
 <html xmlns:th="http://www.thymeleaf.org">
 <head>
     <meta charset="UTF-8">
-    <title>Kullanım Rehberi · Music PostIt</title>
+    <title>User Guide · Music PostIt</title>
 
     <style>
         body {
@@ -66,59 +66,59 @@
 <div class="container">
 
     <div class="card">
-        <h1>Kullanım Rehberi</h1>
+        <h1>User Guide</h1>
         <p>
-            Bu sayfa, <strong th:text="${appName}">Music PostIt</strong> uygulamasının
-            temel kullanım adımlarını açıklamak amacıyla hazırlanmıştır.
+            This page has been prepared to explain the basic usage steps of the
+            <strong th:text="${appName}">Music PostIt</strong> application.
         </p>
     </div>
 
     <div class="card">
-        <h2>🎵 Şarkı Arama</h2>
+        <h2>🎵 Song Search</h2>
         <p>
-            Ana sayfada yer alan arama alanını kullanarak şarkı veya sanatçı adına
-            göre Spotify üzerinden arama yapabilirsiniz.
+            You can search for songs or artists via Spotify using the search field
+            on the home page.
         </p>
         <ul>
-            <li>Arama sonuçlarından bir şarkı seçin</li>
-            <li>“Bu şarkıyı ekle” butonuna tıklayın</li>
-            <li>Şarkı detay sayfasına yönlendirilirsiniz</li>
+            <li>Select a song from the search results</li>
+            <li>Click the “Add this song” button</li>
+            <li>You will be redirected to the song detail page</li>
         </ul>
     </div>
 
     <div class="card">
-        <h2>📝 Şarkıya Not Ekleme</h2>
+        <h2>📝 Adding Notes to a Song</h2>
         <p>
-            Her şarkı için zaman bazlı notlar ekleyebilirsiniz.
+            You can add time-based notes for each song.
         </p>
         <ul>
-            <li>Saniye bilgisini girin</li>
-            <li>Not metnini yazın</li>
-            <li>Notun public veya private olmasını seçin</li>
+            <li>Enter the second value</li>
+            <li>Write your note</li>
+            <li>Select whether the note is public or private</li>
         </ul>
     </div>
 
     <div class="card">
-        <h2>🔒 Public / Private Notlar</h2>
+        <h2>🔒 Public / Private Notes</h2>
         <p>
-            Eklenen notlar iki farklı görünürlük tipine sahiptir:
+            Added notes have two different visibility types:
         </p>
         <ul>
-            <li><strong>Public:</strong> Diğer kullanıcılar tarafından görülebilir</li>
-            <li><strong>Private:</strong> Sadece notu ekleyen kullanıcı görebilir</li>
+            <li><strong>Public:</strong> Visible to other users</li>
+            <li><strong>Private:</strong> Visible only to the user who added the note</li>
         </ul>
     </div>
 
     <div class="card">
-        <h2>❤️ Beğeniler ve Bildirimler</h2>
+        <h2>❤️ Likes and Notifications</h2>
         <p>
-            Public notlar diğer kullanıcılar tarafından beğenilebilir.
-            Notlarınıza gelen beğeniler bildirimler sayfasında görüntülenir.
+            Public notes can be liked by other users.
+            Likes on your notes are displayed on the notifications page.
         </p>
     </div>
 
     <div class="muted">
-        Bu sayfa server-side rendering (Thymeleaf) örneği olarak hazırlanmıştır.
+        This page was prepared as a server-side rendering (Thymeleaf) example.
     </div>
 
 </div>

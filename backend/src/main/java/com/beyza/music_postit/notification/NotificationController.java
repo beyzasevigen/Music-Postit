@@ -17,7 +17,7 @@ public class NotificationController {
         this.likeNotificationRepository = likeNotificationRepository;
     }
 
-    // ✅ Yorumlarına gelen beğeniler
+    // Yorumlarına gelen beğeniler
     @GetMapping("/likes")
     public ResponseEntity<?> myLikeNotifications(@AuthenticationPrincipal User currentUser) {
         if (currentUser == null) {
@@ -45,7 +45,7 @@ public class NotificationController {
 
                     String likedByImageUrl = ""; // user'da image yoksa böyle kalsın
 
-                    // ✅ istediğin metin burada
+
                     String message = likedByUsername + ", \"" + songTitle + "\" şarkısındaki yorumunu beğendi";
 
                     return new LikeNotificationResponse(

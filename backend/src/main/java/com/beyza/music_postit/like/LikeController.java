@@ -27,7 +27,7 @@ public class LikeController {
         this.likeNotificationRepository = likeNotificationRepository;
     }
 
-    // ✅ Like / Unlike (toggle)
+    // Like / Unlike (toggle)
     @PostMapping("/{noteId}/like")
     public ResponseEntity<?> toggleLike(@PathVariable Long noteId,
                                         @AuthenticationPrincipal User currentUser) {
@@ -61,7 +61,7 @@ public class LikeController {
             likedNow = true;
         }
 
-        // ✅ Bildirim: sadece başkasının notu like'lanınca üret/sil
+        // Bildirim: sadece başkasının notu like'lanınca üret/silme
         User owner = note.getUser();      // not sahibi
         User likedBy = currentUser;       // like atan
 
@@ -75,7 +75,7 @@ public class LikeController {
                     likeNotificationRepository.save(new LikeNotification(owner, likedBy, note));
                 }
             } else {
-                // unlike olunca bildirimi sil
+                // unlike olunca bildirimi silme
                 likeNotificationRepository.deleteByOwnerAndLikedByAndNote(owner, likedBy, note);
             }
         }
@@ -85,7 +85,7 @@ public class LikeController {
         return ResponseEntity.ok(new LikeStatusResponse(noteId, likedNow, count));
     }
 
-    // ✅ Like sayısını getir (opsiyonel)
+    // Like sayısını getir
     @GetMapping("/{noteId}/likes/count")
     public ResponseEntity<?> getLikesCount(@PathVariable Long noteId) {
 

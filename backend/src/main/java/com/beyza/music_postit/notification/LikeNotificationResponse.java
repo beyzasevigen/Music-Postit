@@ -11,7 +11,7 @@ public class LikeNotificationResponse {
     private String likedByImageUrl;
     private LocalDateTime createdAt;
 
-    // ✅ yeni alan
+
     private String message;
 
     public LikeNotificationResponse() {}

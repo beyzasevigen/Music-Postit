@@ -11,23 +11,23 @@ export default function ProfilePage() {
 
   const [me, setMe] = useState({ username: "", email: "", imageUrl: "" });
 
-  // ✅ Dinleme geçmişi
+  //  Dinleme geçmişi
   const [history, setHistory] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
 
-  // ✅ Postitlerim
+  //  Postitlerim
   const [postitTab, setPostitTab] = useState("public"); // "public" | "private"
   const [postitSongs, setPostitSongs] = useState([]);
   const [postitLoading, setPostitLoading] = useState(false);
   const [postitError, setPostitError] = useState("");
 
-  // ✅ Profil düzenleme
+  //  Profil düzenleme
   const [editOpen, setEditOpen] = useState(false);
   const [editUsername, setEditUsername] = useState("");
   const [editImageUrl, setEditImageUrl] = useState("");
 
-  // 🎨 tek yerden tema
+  //  tek yerden tema
   const UI = {
     cardBg: "rgba(184,156,255,0.08)",
     cardBorder: "rgba(184,156,255,0.18)",
@@ -39,12 +39,12 @@ export default function ProfilePage() {
     muted2: "#6b7280",
   };
 
-  // ✅ auth yoksa login
+  //  auth yoksa login
   useEffect(() => {
     if (!auth) navigate("/login");
   }, [auth, navigate]);
 
-  // ✅ Profil + dinleme geçmişi yükle
+  // Profil + dinleme geçmişi yükle
   useEffect(() => {
     if (!auth) return;
 
@@ -121,7 +121,7 @@ export default function ProfilePage() {
       imageUrl: editImageUrl,
     }));
 
-    // ✅ localStorage GÜNCELLEMELERİ BURADA
+    // localStorage 
     localStorage.setItem("auth_username", editUsername || "");
     localStorage.setItem("auth_avatar", editImageUrl || "");
 
@@ -134,7 +134,7 @@ export default function ProfilePage() {
 
 
 
-  // ✅ Postitlerim şarkı listesi çek
+  // Postitlerim şarkı listesi çek
   const loadPostits = async (tab) => {
     if (!auth) return;
 
@@ -203,11 +203,11 @@ export default function ProfilePage() {
   useEffect(() => {
     if (!auth) return;
     loadPostits(postitTab);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
+    
   }, [postitTab, auth]);
 
   const styles = {
-    // sayfa artık global theme ile uyumlu: page/content
+    
     content: { paddingBottom: 110 },
 
     card: {
@@ -263,7 +263,7 @@ export default function ProfilePage() {
       outline: "none",
     },
 
-    // list item’ları “cam kart” gibi
+    // list itemları cam kart gibi
     list: { listStyle: "none", padding: 0, margin: 0, marginTop: 8 },
     item: {
       borderTop: "1px solid rgba(184,156,255,0.16)",
@@ -460,33 +460,31 @@ export default function ProfilePage() {
           </ul>
         </div>
         <div style={{ marginTop: 28 }}>
-  <button
-    onClick={logout}
-    style={{
-      width: "100%",
-      padding: "12px 16px",
-      borderRadius: 16,
-      border: "1px solid rgba(239,68,68,0.55)",
-      background: "rgba(239,68,68,0.85)", // 🔴 kırmızı kutu
-      color: "#ffffff",                  // ⚪ beyaz yazı
-      fontWeight: 900,
-      fontSize: 14,
-      cursor: "pointer",
-      transition: "all 0.2s ease",
-    }}
-    onMouseEnter={(e) => {
-      e.currentTarget.style.boxShadow =
-        "0 0 16px rgba(239,68,68,0.55)";
-    }}
-    onMouseLeave={(e) => {
-      e.currentTarget.style.boxShadow = "none";
-    }}
-  >
-    Log out
-  </button>
-</div>
-
-
+        <button
+            onClick={logout}
+            style={{
+            width: "100%",
+            padding: "12px 16px",
+            borderRadius: 16,
+            border: "1px solid rgba(239,68,68,0.55)",
+            background: "rgba(239,68,68,0.85)", //  kırmızı kutu
+            color: "#ffffff",                  //  beyaz yazı
+            fontWeight: 900,
+            fontSize: 14,
+            cursor: "pointer",
+            transition: "all 0.2s ease",
+            }}
+            onMouseEnter={(e) => {
+            e.currentTarget.style.boxShadow =
+                "0 0 16px rgba(239,68,68,0.55)";
+            }}
+            onMouseLeave={(e) => {
+            e.currentTarget.style.boxShadow = "none";
+            }}
+        >
+            Log out
+        </button>
+        </div>
         <BottomNav />
       </div>
     </div>

@@ -61,7 +61,7 @@ export default function LoginPage() {
   localStorage.setItem("auth_avatar", "");
 }
 
-      // (Optional) keep these for UI
+      
       localStorage.setItem("auth_username", username || "");
 
       setMsg("Login successful ✅");

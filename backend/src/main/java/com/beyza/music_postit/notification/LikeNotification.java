@@ -49,7 +49,7 @@ public class LikeNotification {
         this.createdAt = LocalDateTime.now();
         this.message = likedBy.getUsername()
                 + ", \"" + note.getSong().getTitle()
-                + "\" şarkısındaki yorumunu beğendi";
+                + "\" liked the post-it in that song";
     }
 
     public Long getId() { return id; }

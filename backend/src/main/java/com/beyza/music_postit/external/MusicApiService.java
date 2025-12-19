@@ -68,7 +68,7 @@ public class MusicApiService {
         if (track.getAlbum() != null) {
             albumTitle = track.getAlbum().getName();
             if (track.getAlbum().getImages() != null && !track.getAlbum().getImages().isEmpty()) {
-                // Genelde ilk image en büyük
+
                 coverUrl = track.getAlbum().getImages().getFirst().getUrl();
             }
         }

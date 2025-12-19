@@ -27,7 +27,7 @@ public class MusicPostitApplication {
     ) {
         return args -> {
             // Örnek kullanıcı
-            // Örnek kullanıcıyı her durumda düzgün hale getir
+            // Örnek kullanıcıyı her durumda düzgün hale getirme
             User user = userRepository.findByUsername("beyza").orElse(null);
 
             if (user == null) {
@@ -61,10 +61,10 @@ public class MusicPostitApplication {
                 System.out.println("▶ Sample songs created");
             }
 
-            // İlk şarkıyı al
+            // İlk şarkıyı alma
             Song firstSong = songRepository.findAll().getFirst();
 
-            // Eğer hiç note yoksa, örnek bir tane ekleyelim
+            // Eğer hiç note yoksa, örnek bir tane ekleme
             if (noteRepository.count() == 0) {
                 Note note = new Note();
                 note.setUser(user);

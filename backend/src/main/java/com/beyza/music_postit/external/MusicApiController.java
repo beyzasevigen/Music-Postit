@@ -15,7 +15,6 @@ public class MusicApiController {
         this.musicApiService = musicApiService;
     }
 
-    // Örnek: GET /api/external/search?query=yellow
     @GetMapping("/search")
     public ResponseEntity<List<ExternalSongDto>> search(@RequestParam String query) {
         List<ExternalSongDto> results = musicApiService.searchSongs(query);

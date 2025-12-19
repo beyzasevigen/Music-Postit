@@ -14,6 +14,6 @@ public interface NoteRepository extends JpaRepository<Note, Long> {
     // Belirli kullanıcı + şarkı için notlar
     List<Note> findByUserAndSongOrderByTimestampSecAsc(User user, Song song);
 
-    // 🔹 YENİ: Kullanıcının tüm notları (son eklenene göre sırala)
+    // Kullanıcının tüm notları (son eklenene göre sırala)
     List<Note> findByUserOrderByCreatedAtDesc(User user);
 }
