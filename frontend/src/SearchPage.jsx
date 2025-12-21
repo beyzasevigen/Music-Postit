@@ -3,6 +3,8 @@ import { useNavigate } from "react-router-dom";
 import { getAuthHeader } from "./auth";
 import BottomNav from "./BottomNav";
 
+const API_BASE = import.meta.env.VITE_API_BASE || "http://localhost:8080";
+
 export default function SearchPage() {
   const [query, setQuery] = useState("");
   const [results, setResults] = useState([]);
@@ -43,7 +45,7 @@ export default function SearchPage() {
   // Spotify'dan gelen şarkıyı backend'e kaydet
   const importSong = async (song) => {
     try {
-      const response = await fetch("http://localhost:8080/api/songs", {
+      const response = await fetch(`${API_BASE}/api/songs`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -81,7 +83,7 @@ export default function SearchPage() {
 
     try {
       const response = await fetch(
-        `http://localhost:8080/api/external/search?query=${encodeURIComponent(query)}`,
+        `${API_BASE}/api/external/search?query=${encodeURIComponent(query)}`,
         { method: "GET", headers: { Authorization: auth } }
       );
 

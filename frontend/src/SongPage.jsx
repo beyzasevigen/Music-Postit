@@ -3,6 +3,8 @@ import { useParams, Link, useNavigate } from "react-router-dom";
 import { getAuthHeader } from "./auth";
 import BottomNav from "./BottomNav";
 
+const API_BASE = import.meta.env.VITE_API_BASE || "http://localhost:8080";
+
 export default function SongPage() {
   const { id } = useParams();
 
@@ -61,7 +63,7 @@ export default function SongPage() {
       setError("");
 
       try {
-        const songRes = await fetch(`http://localhost:8080/api/songs/${id}`, {
+        const songRes = await fetch(`${API_BASE}/api/songs/${id}`, {
           headers: { Authorization: auth },
         });
         if (!songRes.ok) throw new Error("Şarkı bulunamadı");
@@ -72,7 +74,7 @@ export default function SongPage() {
         if (!sentPlayHistoryRef.current) {
           sentPlayHistoryRef.current = true;
           try {
-            await fetch("http://localhost:8080/api/play-history", {
+            await fetch(`${API_BASE}/api/play-history`, {
               method: "POST",
               headers: {
                 "Content-Type": "application/json",
@@ -89,7 +91,7 @@ export default function SongPage() {
         }
 
         const notesRes = await fetch(
-          `http://localhost:8080/api/songs/${id}/notes`,
+          `${API_BASE}/api/songs/${id}/notes`,
           { headers: { Authorization: auth } }
         );
         if (!notesRes.ok) throw new Error("Notlar alınamadı");
@@ -117,7 +119,7 @@ export default function SongPage() {
     if (!auth) return navigate("/login");
 
     try {
-      const res = await fetch("http://localhost:8080/api/notes", {
+      const res = await fetch(`${API_BASE}/api/notes`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -157,7 +159,7 @@ export default function SongPage() {
     if (!auth) return navigate("/login");
 
     try {
-      const res = await fetch(`http://localhost:8080/api/notes/${noteId}/like`, {
+      const res = await fetch(`${API_BASE}/api/notes/${noteId}/like`, {
         method: "POST",
         headers: { Authorization: auth },
       });

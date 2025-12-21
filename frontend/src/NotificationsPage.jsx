@@ -3,7 +3,7 @@ import { useNavigate, Link } from "react-router-dom";
 import { getAuthHeader } from "./auth";
 import BottomNav from "./BottomNav";
 
-const API_BASE = "http://localhost:8080";
+const API_BASE = import.meta.env.VITE_API_BASE || "http://localhost:8080";
 
 export default function NotificationsPage() {
   const navigate = useNavigate();
