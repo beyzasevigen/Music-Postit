@@ -130,7 +130,7 @@ export default function SearchPage() {
             >
               {/*  Yardım butonu (Thymeleaf) */}
               <a
-                href="http://localhost:8080/help"
+                href={`${import.meta.env.VITE_API_BASE}/help`}
                 target="_blank"
                 rel="noreferrer"
                 title="Yardım"
