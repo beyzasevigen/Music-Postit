@@ -2,6 +2,7 @@ package com.beyza.music_postit.config;
 
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.http.HttpMethod;
 import org.springframework.security.config.Customizer;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
@@ -11,6 +12,7 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.web.cors.CorsConfiguration;
 import org.springframework.web.cors.CorsConfigurationSource;
 import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
+
 import java.util.List;
 
 @Configuration
@@ -29,6 +31,10 @@ public class SecurityConfig {
                 .csrf(csrf -> csrf.disable())
                 .cors(Customizer.withDefaults())
                 .authorizeHttpRequests(auth -> auth
+
+                        // ✅ CORS preflight (ÇOK ÖNEMLİ)
+                        .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll()
+
                         // thymeleaf sayfalar + static dosyalar açık
                         .requestMatchers(
                                 "/help",
@@ -47,8 +53,7 @@ public class SecurityConfig {
                         // diğer her şey için login şart
                         .anyRequest().authenticated()
                 )
-
-                .httpBasic(Customizer.withDefaults())   // Basic Auth (Postman için)
+                .httpBasic(Customizer.withDefaults())   // Basic Auth
                 .formLogin(Customizer.withDefaults())
                 .logout(Customizer.withDefaults());
 
@@ -58,12 +63,18 @@ public class SecurityConfig {
     @Bean
     public CorsConfigurationSource corsConfigurationSource() {
         CorsConfiguration config = new CorsConfiguration();
+
+        // ✅ Frontend originleri (local + Render)
         config.setAllowedOrigins(List.of(
                 "http://localhost:5173",
-                "http://localhost:3000"
+                "http://localhost:3000",
+                "https://music-postit-1.onrender.com"
         ));
+
         config.setAllowedMethods(List.of("GET", "POST", "PUT", "DELETE", "OPTIONS"));
         config.setAllowedHeaders(List.of("Authorization", "Content-Type"));
+
+        // Basic Auth / credentials için true kalabilir
         config.setAllowCredentials(true);
 
         UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
